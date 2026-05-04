@@ -1,0 +1,48 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: vector-db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+
+  fastapi:
+    build: ./fastapi
+    volumes:
+      - ./fastapi:/app
+    container_name: fastapi-service
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/knowledge_base
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  app:
+    build: ./spring_boot_app/chatbot
+    container_name: spring-boot-app
+    ports:
+      - "8080:8080"
+    environment:
+      AI_SERVICE_URL: http://fastapi:8000
+    depends_on:
+      - fastapi
+    networks:
+      - app-network
+
+volumes:
+  pgdata:
+
+networks:
+  app-network:
+    driver: bridge

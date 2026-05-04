@@ -1,0 +1,14 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+torchaudio
+sentence-transformers
+
+fastapi
+uvicorn[standard]
+
+psycopg2-binary
+sqlalchemy
+pgvector
+
+pydantic
