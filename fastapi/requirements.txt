@@ -11,4 +11,10 @@ psycopg2-binary
 sqlalchemy
 pgvector
 
+google-generativeai
+
+python-dotenv
+
+slowapi
+
 pydantic
