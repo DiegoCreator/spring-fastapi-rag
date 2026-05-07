@@ -17,10 +17,7 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 
 # ====== CONFIG ======
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://user:password@localhost:5432/knowledge_base"
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 EMBEDDING_DIM = 384
 

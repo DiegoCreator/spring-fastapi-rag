@@ -22,7 +22,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://user:password@db:5432/knowledge_base
+      DATABASE_URL: ${DATABASE_URL}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
     depends_on:
       - db
