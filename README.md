@@ -35,7 +35,9 @@ The system is based on microservices:
 * **Project tree:**
 
 /spring-app
+
 /fastapi-service
+
 docker-compose.yml
 
 ### 3. Technology stack
@@ -54,7 +56,15 @@ The easiest way to get the whole system up and running is to use Docker Compose.
 
 * `Docker` and `Docker Compose` installed.
 
-2. **Environment configuration:**
+2. **Get Gemini API Key:**
+
+* Go to https://aistudio.google.com/prompts/new_chat
+
+* Create a new API Key.
+
+* Copy the key for the next step.
+
+3. **Environment configuration:**
 
 The project requires defining environment variables for the database.
 
@@ -64,9 +74,9 @@ The project requires defining environment variables for the database.
 cp .env.example .env
 ```
 
-* Open the .env file in an editor and fill in the DB_USER, DB_PASSWORD, and DB_NAME values ​​with your own data.
+* Open the .env file in an editor and fill in the DB_USER, DB_PASSWORD, DB_NAME, DATABASE_URL and GOOGLE_API_KEY values ​​with your own data.
 
-3. **Run the project:**
+4. **Run the project:**
 
 In the main project directory, execute the command:
 
@@ -74,7 +84,7 @@ In the main project directory, execute the command:
 docker-compose up --build
 ```
 
-4. **What gets started**
+5. **What gets started**
 
 * **Service A (Spring Boot):** Builds from a first Dockerfile (Java environment configuration).
 
@@ -98,7 +108,7 @@ curl -X POST http://localhost:8080/ask \
 
 ### 6. Roadmap
 
-* [] Integration with a specific LLM provider (e.g. OpenAI / Ollama).
+* [x] Integration with a specific LLM provider (e.g. OpenAI / Ollama).
 
 * [] Implementation of a document processing pipeline (ETL).
 
