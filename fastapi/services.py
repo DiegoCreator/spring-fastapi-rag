@@ -31,7 +31,7 @@ class AIService:
         cache_key = hash(question + context)
 
         if cache_key in self.answer_cache:
-            return self.answer_cache[question]
+            return self.answer_cache[cache_key]
 
         prompt = f"""
         You are a helpful assistant. Answer the user's question below using only the information (context) provided.
@@ -48,7 +48,7 @@ class AIService:
         try:
             response = self.llm_model.generate_content(prompt)
             answer = response.text
-            self.answer_cache[question] = answer
+            self.answer_cache[cache_key] = answer
             return answer
         except Exception as e:
             logging.error(f"Error Gemini API: {str(e)}")
