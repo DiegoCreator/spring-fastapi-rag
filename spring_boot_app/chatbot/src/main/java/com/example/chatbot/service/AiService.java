@@ -19,7 +19,7 @@ public class AiService {
 
         String enrichedQuestion = "Answer briefly: " + question;
 
-        String response = aiServiceClient.askAi(enrichedQuestion);
+        String response = String.valueOf(aiServiceClient.askAi(enrichedQuestion));
 
         return response.trim();
     }
