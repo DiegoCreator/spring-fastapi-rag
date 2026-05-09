@@ -34,8 +34,13 @@ services:
     container_name: spring-boot-app
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     environment:
-      AI_SERVICE_URL: http://fastapi:8000
+      - AI_SERVICE_URL=http://fastapi:8000
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
     depends_on:
       - fastapi
     networks:
