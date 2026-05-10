@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 public class AiService {
     private final AiServiceClient aiServiceClient;
 
+    private static final String PROMPT_PREFIX = "Answer briefly: ";
+
     public AiService(AiServiceClient aiServiceClient) {
         this.aiServiceClient = aiServiceClient;
     }
@@ -14,12 +16,13 @@ public class AiService {
     public String askQuestion(String question) {
 
         if (question == null || question.isBlank()) {
-            return "Question cannot be empty";
+            throw new IllegalArgumentException("Question cannot be null or empty");
         }
 
-        String enrichedQuestion = "Answer briefly: " + question;
+        String enrichedQuestion = PROMPT_PREFIX + question;
 
-        String response = String.valueOf(aiServiceClient.askAi(enrichedQuestion));
+        Object rawResponse = aiServiceClient.askAi(enrichedQuestion);
+        String response = (rawResponse != null) ? String.valueOf(rawResponse) : "";
 
         return response.trim();
     }
