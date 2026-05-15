@@ -46,8 +46,6 @@ def ask(request: Request, ask_req: AskRequest, db: Session = Depends(get_db)):
 
     return {"answer": answer, "sources": [d.content[:100] for d in results]}
 
-
-
 @app.post("/seed")
 def seed(db: Session = Depends(get_db)):
 

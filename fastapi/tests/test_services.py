@@ -54,9 +54,6 @@ def test_similarity_search_logic(db):
     cat_vector = [1.0] + [0.0] * 383
     dog_vector = [0.0, 1.0] + [0.0] * 382
 
-    # doc1 = Document(id=1, content="About cats", embedding=[1.0, 0.0, 0.0])
-    # doc2 = Document(id=2, content="About dogs", embedding=[0.0, 1.0, 0.0])
-
     doc1 = Document(id=1, content="About cats", embedding=cat_vector)
     doc2 = Document(id=2, content="About dogs", embedding=dog_vector)
 

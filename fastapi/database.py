@@ -6,7 +6,6 @@ EMBEDDING_DIM = 384
 Base = declarative_base()
 
 def get_engine():
-    """Validates the URL and creates the engine only when called."""
     DATABASE_URL = os.getenv("DATABASE_URL")
     if not DATABASE_URL:
         raise ValueError("DATABASE_URL is missing from the .env file. Make sure the configuration is correct.")
