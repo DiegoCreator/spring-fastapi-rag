@@ -1,0 +1,5 @@
+FastAPI is a modern Python web framework.
+
+Spring Boot is popular for Java backend development.
+
+Machine learning enables systems to learn from data.

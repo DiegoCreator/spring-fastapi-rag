@@ -38,12 +38,14 @@ def test_document_content_required(pg_db: Session):
 def test_vector_similarity_search(pg_db: Session):
     vecA = Document(content="Quantum psyhics is complex", embedding=[0.9] * 384)
     vecB = Document(content="Oil painting on canvas", embedding=[0.1] * 384)
+    try:
+        pg_db.add_all([vecA, vecB])
 
-    pg_db.add_all([vecA, vecB])
-    pg_db.commit()
+        vec_query = [0.85] * 384
+        results = pg_db.query(Document).order_by(Document.embedding.l2_distance(vec_query)).limit(1).all()
 
-    vec_query = [0.85] * 384
-    results = pg_db.query(Document).order_by(Document.embedding.l2_distance(vec_query)).limit(1).all()
-
-    assert len(results) == 1
-    assert "psyhics" in results[0].content
+        assert len(results) == 1
+        assert "psyhics" in results[0].content
+    finally:
+        pg_db.query(Document).delete()
+        pg_db.commit()

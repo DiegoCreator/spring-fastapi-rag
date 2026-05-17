@@ -4,9 +4,11 @@ import os
 from sentence_transformers import SentenceTransformer
 import google.generativeai as genai
 from models import Document
+from dotenv import load_dotenv
 
 class AIService:
     def __init__(self):
+        load_dotenv()
         self.api_key = os.getenv("GOOGLE_API_KEY")
         if not self.api_key: raise ValueError("API key missing in environment variables!")
         genai.configure(api_key=self.api_key)
