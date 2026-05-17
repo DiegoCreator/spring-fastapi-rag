@@ -18,9 +18,9 @@ RAG (Retrieval-Augmented Generation) is a technique that allows language models 
 
 The project is under active development.
 
-* **Ready:** Communication between services (Spring <-> FastAPI), connection to the pgvector database, possibility of using the `/ask` endpoint.
+* **Ready:** Communication between services (Spring <-> FastAPI), connection to the pgvector database, possibility of using the `/ask` endpoint, Integration with LLM, document processing (chunking/embedding), ingestion,
 
-* **Under construction:** Integration with LLM, document processing (chunking/embedding), ingestion, frontend, logging + monitoring
+* **Under construction:** frontend, logging + monitoring
 
 ### 2. Architecture
 
@@ -110,7 +110,9 @@ curl -X POST http://localhost:8080/ask \
 
 * [x] Integration with a specific LLM provider (e.g. OpenAI / Ollama).
 
-* [] Implementation of a document processing pipeline (ETL).
+* [x] Implementation of a document processing pipeline (ETL).
+
+* [] Add frontend.
 
 * [] Add Swagger/OpenAPI documentation for both services.
 
