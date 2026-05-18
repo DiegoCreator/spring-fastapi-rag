@@ -19,6 +19,7 @@ def db():
         yield session
     finally:
         session.close()
+        Base.metadata.drop_all(bind=engine)
 
 POSTGRES_URL = os.getenv("DATABASE_URL")
 
