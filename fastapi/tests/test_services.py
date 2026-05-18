@@ -4,7 +4,8 @@ from unittest.mock import patch, MagicMock
 from services import AIService, Document
 
 def test_missing_api_key():
-    with patch.dict(os.environ, {}, clear=True):
+    with patch('services.load_dotenv'), patch.dict(os.environ, {}, clear=True):
+
         with pytest.raises(ValueError) as excinfo:
             AIService()
 
