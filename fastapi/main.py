@@ -9,6 +9,10 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from ingestion import process_and_save_chunks
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
@@ -29,19 +33,31 @@ ai_service = AIService()
 @app.post("/ask", response_model=AskResponse)
 @limiter.limit("5/minute")
 def ask(request: Request, ask_req: AskRequest, db: Session = Depends(get_db)):
-    query_embedding = ai_service.get_embedding(ask_req.question)
+    logger.info(f"Received question: {ask_req.question} from {request.client.host}")
 
-    results = ai_service.similarity_search(query_embedding, db)
+    try:
 
-    if not results:
-        return AskResponse(
-            answer="No relevant documents found",
-            sources=[]
-        )
+        query_embedding = ai_service.get_embedding(ask_req.question)
 
-    context = "\n".join([doc.content for doc in results])
-    answer = ai_service.generate_answer(ask_req.question, context)
-    return {"answer": answer, "sources": [d.content[:100] for d in results]}
+        results = ai_service.similarity_search(query_embedding, db)
+        logger.info(f"Retrieved {len(results)} chunks from DB")
+
+        if not results:
+            logger.warning(f"No context found for query: {ask_req.question}")
+            return AskResponse(
+                answer="No relevant documents found",
+                sources=[]
+            )
+
+        context = "\n".join([doc.content for doc in results])
+        answer = ai_service.generate_answer(ask_req.question, context)
+        logger.info("Answer generated successfully")
+
+        return {"answer": answer, "sources": [d.content[:100] for d in results]}
+
+    except Exception as e:
+        logger.error(f"Error in /ask endpoint: {str(e)}", exc_info=True)
+        raise
 
 @app.post("/ingest")
 def ingest_api(file_path: str, db: Session = Depends(get_db)):

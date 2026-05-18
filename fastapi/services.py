@@ -1,39 +1,52 @@
-import logging
 from typing import List
 import os
 from sentence_transformers import SentenceTransformer
 import google.generativeai as genai
 from models import Document
 from dotenv import load_dotenv
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 class AIService:
     def __init__(self):
         load_dotenv()
         self.api_key = os.getenv("GOOGLE_API_KEY")
-        if not self.api_key: raise ValueError("API key missing in environment variables!")
+        if not self.api_key:
+            logger.critical("API key missing! Service cannot start.")
+            raise ValueError("API key missing in environment variables!")
         genai.configure(api_key=self.api_key)
         self.llm_model = genai.GenerativeModel("models/gemini-2.5-flash")
-
         self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
-
         self.answer_cache = {}
+        logger.info("AIService initialized successfully.")
 
 
     def get_embedding(self, text: str) -> List[float]:
-        return self.embedding_model.encode(text).tolist()
+        try:
+            logger.info(f"Generating embedding for text (length: {len(text)})")
+            return self.embedding_model.encode(text).tolist()
+        except Exception as e:
+            logger.error(f"Embedding generation failed: {e}")
+            raise
 
     def similarity_search(self, query_embedding, db, k=3):
         results = db.query(Document).order_by(
             Document.embedding.cosine_distance(query_embedding)
         ).limit(k).all()
 
+        logger.info(f"Retrieved {len(results)} documents from the database")
         return results
 
     def generate_answer(self, question: str, context: str):
         cache_key = hash(question + context)
 
         if cache_key in self.answer_cache:
+            logger.info("Cache hit: Returning cached answer")
             return self.answer_cache[cache_key]
+
+        logger.info("Cache miss: Generating new content via Gemini")
 
         prompt = f"""
         You are a helpful assistant. Answer the user's question below using only the information (context) provided.
@@ -47,11 +60,14 @@ class AIService:
         {question}
         """
 
+        logger.debug(f"Prompt sent to Gemini: {prompt}")
+
         try:
             response = self.llm_model.generate_content(prompt)
             answer = response.text
             self.answer_cache[cache_key] = answer
+            logger.info(f"Successfully generated answer. Length: {len(answer)}")
             return answer
         except Exception as e:
-            logging.error(f"Error Gemini API: {str(e)}")
+            logging.exception("Failed to generate content from Gemini API")
             return "An error occurred while generating the response"
