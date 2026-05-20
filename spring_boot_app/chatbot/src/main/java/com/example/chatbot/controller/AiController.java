@@ -6,7 +6,9 @@ import com.example.chatbot.service.AiService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 public class AiController {
 
@@ -18,6 +20,9 @@ public class AiController {
 
     @PostMapping("/api/ask")
     public String ask(@RequestBody AskRequest request) {
-        return aiService.askQuestion(request.getQuestion());
+        long start = System.currentTimeMillis();
+        String response = aiService.askQuestion(request.getQuestion());
+        log.info("AI response generated in {} ms", System.currentTimeMillis() - start);
+        return response;
     }
 }

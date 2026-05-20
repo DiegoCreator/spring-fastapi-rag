@@ -10,7 +10,9 @@ import reactor.core.publisher.Mono;
 import com.example.chatbot.dto.AskRequest;
 import reactor.util.retry.Retry;
 import java.time.Duration;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class AiServiceClient {
     private final WebClient webClient;
@@ -29,18 +31,27 @@ public class AiServiceClient {
     }
 
     public Mono<String> askAi(String question) {
+
+        log.debug("Sending AI request endpoint={}", endpoint);
+
         return webClient.post()
                 .uri(endpoint)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new AskRequest(question))
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, response -> response.bodyToMono(String.class).flatMap(body ->
-                        Mono.error(new RuntimeException("AI server error: " + body))))
+                .onStatus(HttpStatusCode::isError, response -> response.bodyToMono(String.class).flatMap(body -> {
+                        log.warn("AI service error status={} body{}", response.statusCode(), body);
+                        return Mono.error(new RuntimeException("AI server error"));
+                }))
                 .bodyToMono(AiResponse.class)
                 .map(AiResponse::getAnswer)
-                .retryWhen(Retry.backoff(maxAttempts, Duration.ofMillis(delay)).filter(throwable -> throwable instanceof RuntimeException))
+                .retryWhen(Retry.backoff(maxAttempts, Duration.ofMillis(delay)).filter(throwable -> throwable instanceof RuntimeException)
+                        .doAfterRetry(retrySignal ->
+                                log.warn("Retry AI request attempt={}", retrySignal.totalRetries() + 1))
+                )
                 .onErrorResume(e -> {
-                    System.err.println("All attempts to connect to the AI have failed: " + e.getMessage());
+                    log.error("AI request failed after retries", e);
+
                     return Mono.just("AI service temporarily unavailable");
                 });
     }
