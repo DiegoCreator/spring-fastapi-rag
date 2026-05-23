@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RAG app</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <div class="message ai-message">Hello! How can I help you today?</div>
+      </div>
+
+      <form class="chat-input-area" id="chatForm">
+        <input
+          type="text"
+          id="userInput"
+          class="chat-input"
+          placeholder="Type your message here..."
+          autocomplete="off"
+          required
+        />
+        <button type="submit" class="send-btn">Send</button>
+      </form>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
