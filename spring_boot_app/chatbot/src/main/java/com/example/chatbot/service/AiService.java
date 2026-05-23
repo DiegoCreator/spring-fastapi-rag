@@ -2,6 +2,7 @@ package com.example.chatbot.service;
 import lombok.extern.slf4j.Slf4j;
 import com.example.chatbot.client.AiServiceClient;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
@@ -14,7 +15,7 @@ public class AiService {
         this.aiServiceClient = aiServiceClient;
     }
 
-    public String askQuestion(String question) {
+    public Mono<String> askQuestion(String question) {
 
         if (question == null || question.isBlank()) {
             log.warn("Attempted to ask AI with empty question");
@@ -33,7 +34,7 @@ public class AiService {
                 log.warn("AI service returned empty response");
             }
 
-            return response.trim();
+            return aiServiceClient.askAi(question).map(String::trim);
         } catch (Exception e) {
             log.error("Failed to get response from AI service");
             throw e;

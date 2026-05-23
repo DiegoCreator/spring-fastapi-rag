@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
@@ -19,10 +20,9 @@ public class AiController {
     }
 
     @PostMapping("/api/ask")
-    public String ask(@RequestBody AskRequest request) {
+    public Mono<String> ask(@RequestBody AskRequest request) {
         long start = System.currentTimeMillis();
-        String response = aiService.askQuestion(request.getQuestion());
-        log.info("AI response generated in {} ms", System.currentTimeMillis() - start);
-        return response;
+        return aiService.askQuestion(request.getQuestion()) // Assuming this returns Mono<String>
+                .doOnSuccess(reply -> log.info("AI response generated in {} ms", System.currentTimeMillis() - start));
     }
 }
