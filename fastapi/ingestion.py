@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import Document
+from models import DocumentChunk
 from services import AIService
 import logging
 
@@ -20,34 +20,38 @@ def load_text_file(path: str):
         return f.read()
 
 
-def process_and_save_chunks(db: Session, path: str):
+def process_and_save_chunks(db: Session, path: str, document_id):
     logger.info(f"Starting processing for file: {path}")
 
     try:
-
         text = load_text_file(path)
         chunks = chunk_text(text)
         logger.info(f"File loaded and split into {len(chunks)} chunks.")
 
         ai_service = AIService()
 
-        for chunk in chunks:
-            try:
-                embedding = ai_service.get_embedding(chunk)
-                doc = Document(content=chunk, embedding=embedding)
-                db.add(doc)
-            except Exception as e:
-                logger.error(f"Failed to process chunk: {e}")
-                continue
+        saved_chunks = 0
+
+        for index, chunk in enumerate(chunks):
+            with db.begin_nested():
+                try:
+                    embedding = ai_service.get_embedding(chunk)
+                    doc = DocumentChunk(document_id=document_id, chunk_index=index, content=chunk, embedding=embedding)
+                    db.add(doc)
+                    db.flush()
+                    saved_chunks += 1
+                except Exception as e:
+                    logger.error(f"Failed to process chunk {index}: {e}")
+                    continue
 
         db.commit()
-        logger.info(f"Successfully saved {len(chunks)} chunks to the database.")
-        return len(chunks)
+        logger.info(f"Successfully saved {saved_chunks} chunks to the database.")
+        return saved_chunks
 
     except FileNotFoundError:
         logger.error(f"File not found: {path}")
         raise
+
     except Exception as e:
         logger.critical(f"Unexpected error processing {path}: {e}")
-        db.rollback()
         raise

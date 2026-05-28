@@ -1,7 +1,7 @@
 import pytest
 import os
 from unittest.mock import patch, MagicMock
-from services import AIService, Document
+from services import AIService, DocumentChunk
 
 def test_missing_api_key():
     with patch('services.load_dotenv'), patch.dict(os.environ, {}, clear=True):
@@ -55,8 +55,8 @@ def test_similarity_search_logic(db):
     cat_vector = [1.0] + [0.0] * 383
     dog_vector = [0.0, 1.0] + [0.0] * 382
 
-    doc1 = Document(id=1, content="About cats", embedding=cat_vector)
-    doc2 = Document(id=2, content="About dogs", embedding=dog_vector)
+    doc1 = DocumentChunk(id=1, content="About cats", embedding=cat_vector)
+    doc2 = DocumentChunk(id=2, content="About dogs", embedding=dog_vector)
 
     mock_query = db.query = MagicMock()
     mock_query.return_value.order_by.return_value.limit.return_value.all.return_value = [doc1, doc2]

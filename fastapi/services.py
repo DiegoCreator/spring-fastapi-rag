@@ -2,7 +2,7 @@ from typing import List
 import os
 from sentence_transformers import SentenceTransformer
 import google.generativeai as genai
-from models import Document
+from models import DocumentChunk
 from dotenv import load_dotenv
 import logging
 
@@ -32,8 +32,8 @@ class AIService:
             raise
 
     def similarity_search(self, query_embedding, db, k=3):
-        results = db.query(Document).order_by(
-            Document.embedding.cosine_distance(query_embedding)
+        results = db.query(DocumentChunk).order_by(
+            DocumentChunk.embedding.cosine_distance(query_embedding)
         ).limit(k).all()
 
         logger.info(f"Retrieved {len(results)} documents from the database")
