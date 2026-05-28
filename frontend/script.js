@@ -1,6 +1,9 @@
 const chatMessages = document.getElementById("chatMessages");
 const chatForm = document.getElementById("chatForm");
 const userInput = document.getElementById("userInput");
+const uploadLabel = document.getElementById("uploadLabel");
+const txtFile = document.getElementById("txt-file");
+const statusDiv = document.getElementById("status");
 
 let messageCounter = 0;
 
@@ -51,6 +54,49 @@ chatForm.addEventListener("submit", async (e) => {
     }
   }
 });
+
+txtFile.addEventListener("change", async () => {
+  if (txtFile.files.lenght === 0) {
+    statusDiv.textContent = "Please select a file first.";
+    return;
+  }
+
+  const file = txtFile.files[0];
+  statusDiv.textContent = "Uploading";
+
+  try {
+    const result = await uploadFile(file);
+    statusDiv.textContent = `Success! File ID: ${result.file_id}`;
+    console.log("Server response:", result);
+  } catch (error) {
+    statusDiv.textContent = `Upload failed: ${error.message}`;
+  }
+});
+
+async function uploadFile(file) {
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  try {
+    const response = await fetch("http://localhost:8000/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Upload failed with status ${response.status}: ${errorText}`,
+      );
+    }
+
+    const data = await response.text();
+    return data;
+  } catch (error) {
+    console.error("Error uploading file: ", error);
+  }
+}
 
 function appendMessage(text, className) {
   const messageDiv = document.createElement("div");
