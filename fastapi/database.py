@@ -20,11 +20,11 @@ def get_engine():
     logger.info("Initializing SQLAlchemy engine...")
     return create_engine(DATABASE_URL, pool_size=5, max_overflow=10)
 
+engine = get_engine()
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 def get_db():
     """Creates a session using the engine."""
-    engine = get_engine()
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
     db = SessionLocal()
 
     logger.debug("Database session started.")
