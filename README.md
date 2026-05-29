@@ -18,9 +18,9 @@ RAG (Retrieval-Augmented Generation) is a technique that allows language models 
 
 The project is under active development.
 
-* **Ready:** Communication between services (Spring <-> FastAPI), connection to the pgvector database, possibility of using the `/ask` endpoint, Integration with LLM, document processing (chunking/embedding), ingestion,
+* **Ready:** Communication between services (Spring <-> FastAPI), connection to the pgvector database, possibility of using the `/ask` endpoint, Integration with LLM, document processing (chunking/embedding), ingestion, frontend, logging, upload file
 
-* **Under construction:** frontend, logging + monitoring
+* **Under construction:** add support for PDF, DOCX, MD extensions in the file upload function, conversation memory
 
 ### 2. Architecture
 
@@ -31,6 +31,8 @@ The system is based on microservices:
 * **FastAPI:** Responsible for heavy AI operations.
 
 * **PostgreSQL + pgvector:** A database storing vectors for semantic search.
+
+* **frontend:** Visual and interactive layer of the application 
 
 * **Project tree:**
 
@@ -48,7 +50,19 @@ docker-compose.yml
 
 * **Database:** PostgreSQL with the pgvector extension
 
-### 4. How to start the project
+* **Frontend:** Basic HTML, CSS and JS
+
+### 4. Knowledge Base
+
+This project uses a simple RAG pipeline where users can upload text files through the frontend.
+
+Uploaded files are stored in the database and become available to the AI assistant until they are removed.
+
+The repository includes a sample file in `uploads` folder so the project can be tested immediately after setup.
+
+You can also upload your own .txt files from the UI to create a custom knowledge base.
+
+### 5. How to start the project
 
 The easiest way to get the whole system up and running is to use Docker Compose.
 
@@ -90,11 +104,13 @@ docker-compose up --build
 
 * **Service B (FastAPI):** Builds from a second Dockerfile (Python environment configuration).
 
+* **Frontend:**  Builds from a third Dockerfile (Frontend evironment configuration).
+
 * **PostgreSQL:** A database instance with the pgvector extension is automatically launched.
 
 * **Networking:** The containers are connected to a single network, allowing communication between Spring and FastAPI to work out of the box.
 
-### 5. API testing
+### 6. API testing
 
 After running the application using docker-compose, you can test communication with the RAG system by sending a request to the `/ask` endpoint.
 
@@ -106,17 +122,27 @@ curl -X POST http://localhost:8080/ask \
      -d '{"question": "What is FastAPI?"}'
 ```
 
-### 6. Roadmap
+* **using the frontend:**
+
+1. Run the app and enter the frontend.
+
+2. type e.g. "What is FastAPI?"
+
+### 7. Roadmap
 
 * [x] Integration with a specific LLM provider (e.g. OpenAI / Ollama).
 
 * [x] Implementation of a document processing pipeline (ETL).
 
-* [] Add frontend.
+* [x] Add frontend.
+
+* [] Add support for PDF, DOCX, MD extensions in the file upload function.
+
+* [] Conversation memory.
 
 * [] Add Swagger/OpenAPI documentation for both services.
 
 
-### 7. License
+### 8. License
 
 This project is open-source and available under the MIT License.
