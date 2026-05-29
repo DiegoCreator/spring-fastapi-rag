@@ -1,0 +1,10 @@
+FastAPI is a modern Python web framework.
+
+Spring Boot is popular for Java backend development.
+
+Spring boot is a Java tool for backend development
+
+Machine learning enables systems to learn from data.
+
+Docker is an operating system for containers
+
