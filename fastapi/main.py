@@ -5,13 +5,14 @@ from pydantic import BaseModel
 from typing import List
 from sqlalchemy.orm import Session
 from cors_config import setup_cors
-from models import UploadedDocument
+from models import UploadedDocument, DocumentChunk
 from services import AIService
 from database import get_db, Base, get_engine
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from ingestion import process_and_save_chunks, delete_documents
+from sqlalchemy import select
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -105,3 +106,12 @@ def ingest_api(file_path: str, db: Session = Depends(get_db)):
 @app.delete("/upload/{document_id}")
 def delete_document(document_id: str, db: Session = Depends(get_db)):
     return delete_documents(db, document_id)
+
+@app.get("/upload/document")
+def get_documents(db: Session = Depends(get_db)):
+    documents = db.scalars(select(UploadedDocument)).all()
+
+    return [
+        {"id": doc.id, "filename": doc.filename}
+        for doc in documents
+    ]
