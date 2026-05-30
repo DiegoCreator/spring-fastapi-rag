@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import DocumentChunk
+from models import DocumentChunk, UploadedDocument
 from services import AIService
 import logging
 
@@ -18,6 +18,13 @@ def chunk_text(text: str):
 def load_text_file(path: str):
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
+
+def delete_documents(db: Session, document_id: str):
+    document = db.get(UploadedDocument, document_id)
+
+    if document:
+        db.delete(document)
+        db.commit()
 
 
 def process_and_save_chunks(db: Session, path: str, document_id):
