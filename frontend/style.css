@@ -111,3 +111,31 @@ body {
 .custom-file-button:hover {
   background-color: #0056b3;
 }
+
+.delete-btn {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 2px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.delete-btn:hover {
+  background-color: #b91c1c;
+}
+
+#sidebar {
+  position: fixed;
+  background-color: #1d1c1c;
+  left: 0;
+  top: 0;
+  width: 250px;
+  height: 100vh;
+  display: flex;
+  padding: 14px;
+  color: white;
+  flex-direction: column;
+}

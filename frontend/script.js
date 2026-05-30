@@ -4,6 +4,7 @@ const userInput = document.getElementById("userInput");
 const uploadLabel = document.getElementById("uploadLabel");
 const txtFile = document.getElementById("txt-file");
 const statusDiv = document.getElementById("status");
+const sidebar = document.getElementById("sidebar");
 
 let messageCounter = 0;
 
@@ -98,6 +99,72 @@ async function uploadFile(file) {
   }
 }
 
+async function getDocuments() {
+  try {
+    const response = await fetch("http://localhost:8000/upload/document", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Upload failed with status ${response.status}: ${errorText}`,
+      );
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error uploading file: ", error);
+  }
+}
+
+async function loadDocuments() {
+  const documents = await getDocuments();
+
+  sidebar.innerHTML = documents
+    .map(
+      (doc) => `
+      <div>
+        ${doc.filename}
+        <button class="delete-btn" onclick="deleteDocument('${doc.id}')">
+          Delete
+        </button>
+      </div>
+    `,
+    )
+    .join("");
+}
+
+async function deleteDocument(id) {
+  try {
+    const response = await fetch(`http://localhost:8000/upload/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Upload failed with status ${response.status}: ${errorText}`,
+      );
+    }
+
+    const data = await response.json();
+
+    await loadDocuments();
+
+    return data;
+  } catch (error) {
+    console.error("Error uploading file: ", error);
+  }
+}
+
 function appendMessage(text, className) {
   const messageDiv = document.createElement("div");
   const uniqueId = `msg-${Date.now()}-${messageCounter++}`;
@@ -112,3 +179,5 @@ function appendMessage(text, className) {
 
   return uniqueId;
 }
+
+loadDocuments();
