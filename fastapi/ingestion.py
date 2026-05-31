@@ -1,6 +1,9 @@
 from sqlalchemy.orm import Session
 from models import DocumentChunk, UploadedDocument
 from services import AIService
+from pypdf import PdfReader
+from docx import Document
+from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,6 +22,35 @@ def load_text_file(path: str):
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
+def load_pdf(path: str):
+    reader = PdfReader(path)
+
+    text = ""
+    for page in reader.pages:
+        text += page.extract_text() or ""
+
+    return text
+
+def load_docx(path: str):
+    doc = Document(path)
+
+    return "\n".join(paragraph.text for paragraph in doc.paragraphs)
+
+def load_document(path: str):
+    ext = Path(path).suffix.lower()
+
+    if ext == ".txt":
+        return load_text_file(path)
+    elif ext == ".md":
+        return load_text_file(path)
+    elif ext == ".pdf":
+        return load_pdf(path)
+    elif ext == ".docx":
+        return load_docx(path)
+
+    else:
+        raise ValueError(f"Unsupported file type: {ext}")
+
 def delete_documents(db: Session, document_id: str):
     document = db.get(UploadedDocument, document_id)
 
@@ -31,7 +63,7 @@ def process_and_save_chunks(db: Session, path: str, document_id):
     logger.info(f"Starting processing for file: {path}")
 
     try:
-        text = load_text_file(path)
+        text = load_document(path)
         chunks = chunk_text(text)
         logger.info(f"File loaded and split into {len(chunks)} chunks.")
 

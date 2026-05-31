@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import List
 from sqlalchemy.orm import Session
 from cors_config import setup_cors
-from models import UploadedDocument, DocumentChunk
+from models import UploadedDocument
 from services import AIService
 from database import get_db, Base, get_engine
 from slowapi import Limiter, _rate_limit_exceeded_handler
