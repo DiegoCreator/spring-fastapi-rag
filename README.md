@@ -18,9 +18,9 @@ RAG (Retrieval-Augmented Generation) is a technique that allows language models 
 
 The project is under active development.
 
-* **Ready:** Communication between services (Spring <-> FastAPI), connection to the pgvector database, possibility of using the `/ask` endpoint, Integration with LLM, document processing (chunking/embedding), ingestion, frontend, logging, upload file
+* **Ready:** Communication between services (Spring <-> FastAPI), connection to the pgvector database, possibility of using the `/ask` endpoint, Integration with LLM, document processing (chunking/embedding), ingestion, frontend, logging, upload file, support for .txt, PDF, DOCX, MD extensions
 
-* **Under construction:** add support for PDF, DOCX, MD extensions in the file upload function, conversation memory
+* **Under construction:** conversation memory
 
 ### 2. Architecture
 
@@ -136,7 +136,7 @@ curl -X POST http://localhost:8080/ask \
 
 * [x] Add frontend.
 
-* [] Add support for PDF, DOCX, MD extensions in the file upload function.
+* [x] Add support for PDF, DOCX, MD extensions in the file upload function.
 
 * [] Conversation memory.
 
