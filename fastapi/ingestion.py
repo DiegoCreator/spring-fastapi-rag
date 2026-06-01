@@ -9,12 +9,23 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-def chunk_text(text: str):
-    chunks = [
-        chunk.strip()
-        for chunk in text.split("\n")
-        if chunk.strip()
+def chunk_text(text: str,  chunk_size: int = 3, overlap: int = 1):
+    lines = [
+        line.strip()
+        for line in text.split("\n")
+        if line.strip()
     ]
+
+    chunks = []
+    step = chunk_size - overlap
+
+    for i in range(0, len(lines), step):
+        chunk = lines[i:i + chunk_size]
+        if chunk:
+            chunks.append("\n".join(chunk))
+
+        if i + chunk_size >= len(lines):
+            break
 
     return chunks
 
