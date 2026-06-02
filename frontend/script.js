@@ -101,7 +101,7 @@ async function uploadFile(file) {
 
 async function getDocuments() {
   try {
-    const response = await fetch("http://localhost:8000/upload/document", {
+    const response = await fetch("http://localhost:8000/documents", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -141,12 +141,15 @@ async function loadDocuments() {
 
 async function deleteDocument(id) {
   try {
-    const response = await fetch(`http://localhost:8000/upload/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `http://localhost:8000/documents/{document_id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       const errorText = await response.text();

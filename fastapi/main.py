@@ -13,40 +13,50 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from ingestion import process_and_save_chunks, delete_documents
 from sqlalchemy import select
+from contextlib import asynccontextmanager
+from pathlib import Path
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 limiter = Limiter(key_func=get_remote_address)
-app = FastAPI()
+
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    engine = get_engine()
+    Base.metadata.create_all(bind=engine)
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 setup_cors(app)
 
-UPLOAD_DIR = "uploads"
-
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-engine = get_engine()
-
-Base.metadata.create_all(bind=engine)
-
 class AskRequest(BaseModel):
     question: str
 
+class SourceItem(BaseModel):
+    documents_id: str
+    chunk_id: str
+
 class AskResponse(BaseModel):
     answer: str
-    sources: List[str]
+    sources: List[SourceItem]
 
-ai_service = AIService()
+
+def get_ai_service() -> AIService:
+    return AIService()
 
 # ====== ENDPOINT ======
 @app.post("/ask", response_model=AskResponse)
 @limiter.limit("5/minute")
-def ask(request: Request, ask_req: AskRequest, db: Session = Depends(get_db)):
+def ask(request: Request, ask_req: AskRequest, db: Session = Depends(get_db), ai_service: AIService = Depends(get_ai_service)):
     logger.info(f"Received question: {ask_req.question} from {request.client.host}")
 
     try:
@@ -67,21 +77,22 @@ def ask(request: Request, ask_req: AskRequest, db: Session = Depends(get_db)):
         answer = ai_service.generate_answer(ask_req.question, context)
         logger.info("Answer generated successfully")
 
-        return {"answer": answer, "sources": [d.content[:100] for d in results]}
+        return {"answer": answer, "sources": [{"documents_id": str(d.document_id), "chunk_id": str(d.id)} for d in results]}
 
     except Exception as e:
-        logger.error(f"Error in /ask endpoint: {str(e)}", exc_info=True)
+        logger.exception(f"Error in /ask endpoint: {str(e)}", exc_info=True)
         raise
 
 @app.post("/upload")
-async def upload_file(file: UploadFile = File(), db: Session = Depends(get_db)):
+async def upload_file(file: UploadFile = File(), db: Session = Depends(get_db), ai_service: AIService = Depends(get_ai_service)) -> dict:
     file_id = str(uuid.uuid4())
 
-    path = f"{UPLOAD_DIR}/{file_id}_{file.filename}"
+    safe_name = Path(file.filename).name
+
+    path = f"{UPLOAD_DIR}/{file_id}_{safe_name}"
 
     with open(path, "wb") as f:
-        content = await file.read()
-        f.write(content)
+        f.write(file.file.read())
 
     uploaded_doc = UploadedDocument(id=file_id, filename=file.filename, path=path)
 
@@ -98,16 +109,16 @@ async def upload_file(file: UploadFile = File(), db: Session = Depends(get_db)):
     }
 
 @app.post("/ingest")
-def ingest_api(file_path: str, db: Session = Depends(get_db)):
+def ingest_api(file_path: str, db: Session = Depends(get_db), ai_service: AIService = Depends(get_ai_service)):
     count = process_and_save_chunks(db, file_path, document_id=None, ai_service=ai_service)
 
     return {"message": f"Processed {count} chunks."}
 
-@app.delete("/upload/{document_id}")
+@app.delete("/documents/{document_id}")
 def delete_document(document_id: str, db: Session = Depends(get_db)):
     return delete_documents(db, document_id)
 
-@app.get("/upload/document")
+@app.get("/documents")
 def get_documents(db: Session = Depends(get_db)):
     documents = db.scalars(select(UploadedDocument)).all()
 

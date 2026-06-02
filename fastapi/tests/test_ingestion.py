@@ -1,9 +1,11 @@
 import pytest
-from requests import Session
+from services import AIService
 from ingestion import chunk_text, load_text_file, process_and_save_chunks
 from unittest.mock import patch, MagicMock
 from models import DocumentChunk, UploadedDocument
 import uuid
+
+ai_service = AIService()
 
 @pytest.mark.parametrize("input_text, expected_output", [
     ("Hello\nWorld", ["Hello", "World"]),
@@ -55,7 +57,7 @@ def test_process_and_save_chunks_workflow():
         with patch("ingestion.AIService", return_value=mock_ai):
             mock_load.return_value = "Line 1\nLine 2"
 
-            count = process_and_save_chunks(mock_db, "file_path.txt", DocumentChunk.id)
+            count = process_and_save_chunks(mock_db, "file_path.txt", DocumentChunk.id, ai_service=ai_service)
 
             assert count == 2
             assert mock_db.add.call_count == 2
@@ -79,7 +81,7 @@ def test_process_and_save_chunks_integration(pg_db, tmp_path):
 
         instance.get_embedding.return_value = [0.1] * 384
 
-        count = process_and_save_chunks(pg_db, str(test_file), uploaded_doc.id)
+        count = process_and_save_chunks(pg_db, str(test_file), uploaded_doc.id, ai_service=ai_service)
 
         assert count == 2
 
