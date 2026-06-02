@@ -64,8 +64,8 @@ def load_document(path: str):
 
 def delete_documents(db: Session, document_id: str):
     document = db.get(UploadedDocument, document_id)
-
     if document:
+        Path(document.path).unlink(missing_ok=True)
         db.delete(document)
         db.commit()
 
