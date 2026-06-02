@@ -88,7 +88,7 @@ async def upload_file(file: UploadFile = File(), db: Session = Depends(get_db)):
     db.add(uploaded_doc)
     db.commit()
 
-    chunks_count = process_and_save_chunks(db, path, uploaded_doc.id)
+    chunks_count = process_and_save_chunks(db, path, uploaded_doc.id, ai_service=ai_service)
 
     return  {
         "file_id": file_id,
@@ -99,7 +99,7 @@ async def upload_file(file: UploadFile = File(), db: Session = Depends(get_db)):
 
 @app.post("/ingest")
 def ingest_api(file_path: str, db: Session = Depends(get_db)):
-    count = process_and_save_chunks(db, file_path, document_id=None)
+    count = process_and_save_chunks(db, file_path, document_id=None, ai_service=ai_service)
 
     return {"message": f"Processed {count} chunks."}
 

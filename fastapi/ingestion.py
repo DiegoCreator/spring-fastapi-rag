@@ -9,7 +9,10 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-def chunk_text(text: str,  chunk_size: int = 3, overlap: int = 1):
+def chunk_text(text: str,  chunk_size: int = 3, overlap: int = 1) -> list[str]:
+    if overlap >= chunk_size:
+        raise ValueError("Overlap must be smaller than chunk_size")
+
     lines = [
         line.strip()
         for line in text.split("\n")
@@ -29,11 +32,11 @@ def chunk_text(text: str,  chunk_size: int = 3, overlap: int = 1):
 
     return chunks
 
-def load_text_file(path: str):
+def load_text_file(path: str) -> str:
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
-def load_pdf(path: str):
+def load_pdf(path: str) -> str:
     reader = PdfReader(path)
 
     text = ""
@@ -42,27 +45,27 @@ def load_pdf(path: str):
 
     return text
 
-def load_docx(path: str):
+def load_docx(path: str) -> str:
     doc = Document(path)
 
     return "\n".join(paragraph.text for paragraph in doc.paragraphs)
 
-def load_document(path: str):
+LOADERS = {
+    ".txt": load_text_file,
+    ".md": load_text_file,
+    ".pdf": load_pdf,
+    ".docx": load_docx,
+}
+
+def load_document(path: str) -> str:
     ext = Path(path).suffix.lower()
 
-    if ext == ".txt":
-        return load_text_file(path)
-    elif ext == ".md":
-        return load_text_file(path)
-    elif ext == ".pdf":
-        return load_pdf(path)
-    elif ext == ".docx":
-        return load_docx(path)
-
-    else:
+    try:
+        return LOADERS[ext](path)
+    except KeyError:
         raise ValueError(f"Unsupported file type: {ext}")
 
-def delete_documents(db: Session, document_id: str):
+def delete_documents(db: Session, document_id: str) -> None:
     document = db.get(UploadedDocument, document_id)
     if document:
         Path(document.path).unlink(missing_ok=True)
@@ -70,15 +73,13 @@ def delete_documents(db: Session, document_id: str):
         db.commit()
 
 
-def process_and_save_chunks(db: Session, path: str, document_id):
+def process_and_save_chunks(db: Session, path: str, document_id, ai_service: AIService) -> int:
     logger.info(f"Starting processing for file: {path}")
 
     try:
         text = load_document(path)
         chunks = chunk_text(text)
         logger.info(f"File loaded and split into {len(chunks)} chunks.")
-
-        ai_service = AIService()
 
         saved_chunks = 0
 
@@ -91,7 +92,7 @@ def process_and_save_chunks(db: Session, path: str, document_id):
                     db.flush()
                     saved_chunks += 1
                 except Exception as e:
-                    logger.error(f"Failed to process chunk {index}: {e}")
+                    logger.exception(f"Failed to process chunk {index}")
                     continue
 
         db.commit()
