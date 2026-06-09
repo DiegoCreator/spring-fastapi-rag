@@ -139,3 +139,16 @@ body {
   color: white;
   flex-direction: column;
 }
+
+.chatTitle {
+  cursor: pointer;
+}
+
+.sidebar-section {
+  padding-bottom: 15px;
+}
+
+.newChat-btn {
+  cursor: pointer;
+  padding-bottom: 15px;
+}

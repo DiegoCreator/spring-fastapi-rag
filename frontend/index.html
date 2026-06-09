@@ -23,18 +23,28 @@
         />
         <button type="submit" class="send-btn">Send</button>
       </form>
-      <label for="txt-file" id="uploadLabel" class="custom-file-button"
+      <label for="uploadInput" id="uploadLabel" class="custom-file-button"
         >Choose .txt, .md, .docx, or .pdf file</label
       >
       <input
         type="file"
-        id="txt-file"
+        id="uploadInput"
         class="file-input-hidden"
         accept=".txt,.pdf,.md,.docx"
       />
       <div id="status"></div>
+    
+    <div id="sidebar">
+      <h3 onClick="window.location.href='http://localhost:3000'" class="newChat-btn">New chat</h3>
+      <div class="sidebar-section">
+        <h3>Chats</h3>
+        <div id="chatList"></div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Files</h3>
+        <div id="documentList"></div>
+      </div>
     </div>
-    <div id="sidebar"></div>
     <script src="script.js"></script>
   </body>
 </html>
