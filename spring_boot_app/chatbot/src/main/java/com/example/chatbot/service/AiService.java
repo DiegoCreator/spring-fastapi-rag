@@ -4,6 +4,8 @@ import com.example.chatbot.client.AiServiceClient;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 public class AiService {
@@ -15,7 +17,7 @@ public class AiService {
         this.aiServiceClient = aiServiceClient;
     }
 
-    public Mono<String> askQuestion(String question) {
+    public Mono<String> askQuestion(String question, UUID sessionId) {
 
         if (question == null || question.isBlank()) {
             log.warn("Attempted to ask AI with empty question");
@@ -27,14 +29,14 @@ public class AiService {
         try {
             log.debug("Sending request to AI service");
 
-            Object rawResponse = aiServiceClient.askAi(enrichedQuestion);
+            Object rawResponse = aiServiceClient.askAi(enrichedQuestion, sessionId);
             String response = (rawResponse != null) ? String.valueOf(rawResponse) : "";
 
             if (response.isBlank()) {
                 log.warn("AI service returned empty response");
             }
 
-            return aiServiceClient.askAi(question).map(String::trim);
+            return aiServiceClient.askAi(question, sessionId).map(String::trim);
         } catch (Exception e) {
             log.error("Failed to get response from AI service");
             throw e;

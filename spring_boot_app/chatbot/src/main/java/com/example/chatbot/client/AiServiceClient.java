@@ -10,6 +10,8 @@ import reactor.core.publisher.Mono;
 import com.example.chatbot.dto.AskRequest;
 import reactor.util.retry.Retry;
 import java.time.Duration;
+import java.util.UUID;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -30,14 +32,14 @@ public class AiServiceClient {
         this.webClient = aiWebClient;
     }
 
-    public Mono<String> askAi(String question) {
+    public Mono<String> askAi(String question, UUID sessionId) {
 
         log.debug("Sending AI request endpoint={}", endpoint);
 
         return webClient.post()
                 .uri(endpoint)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new AskRequest(question))
+                .bodyValue(new AskRequest(question, sessionId))
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, response -> response.bodyToMono(String.class).flatMap(body -> {
                         log.warn("AI service error status={} body{}", response.statusCode(), body);
