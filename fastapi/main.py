@@ -1,11 +1,14 @@
 import os
 import uuid
+from uuid import UUID
 from fastapi import FastAPI, Request, UploadFile, File, Depends
 from pydantic import BaseModel
 from typing import List
 from sqlalchemy.orm import Session
+from conversation_service import sliding_window, save_message, semantic_search, delete_session
 from cors_config import setup_cors
-from models import UploadedDocument
+from models import UploadedDocument, ChatSession, ChatMessage
+from schemas import  ChatMessageOut
 from services import AIService
 from database import get_db, Base, get_engine
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -40,6 +43,7 @@ setup_cors(app)
 
 class AskRequest(BaseModel):
     question: str
+    session_id: UUID
 
 class SourceItem(BaseModel):
     documents_id: str
@@ -49,9 +53,10 @@ class AskResponse(BaseModel):
     answer: str
     sources: List[SourceItem]
 
+ai_service_instance = AIService()
 
 def get_ai_service() -> AIService:
-    return AIService()
+    return ai_service_instance
 
 # ====== ENDPOINT ======
 @app.post("/ask", response_model=AskResponse)
@@ -63,7 +68,12 @@ def ask(request: Request, ask_req: AskRequest, db: Session = Depends(get_db), ai
 
         query_embedding = ai_service.get_embedding(ask_req.question)
 
+        save_message(ask_req.session_id, role="user", content=ask_req.question, embedding=query_embedding, db=db)
+
         results = ai_service.similarity_search(query_embedding, db)
+
+        semantic_history = semantic_search(ask_req.session_id, query_embedding, limit=2, db=db)
+
         logger.info(f"Retrieved {len(results)} chunks from DB")
 
         if not results:
@@ -73,9 +83,12 @@ def ask(request: Request, ask_req: AskRequest, db: Session = Depends(get_db), ai
                 sources=[]
             )
 
+        chat_history = sliding_window(ask_req.session_id, db, limit=6)
         context = "\n".join([doc.content for doc in results])
-        answer = ai_service.generate_answer(ask_req.question, context)
+        answer = ai_service.generate_answer(ask_req.question, context, chat_history, semantic_history)
         logger.info("Answer generated successfully")
+
+        save_message(ask_req.session_id, role="assistant", content=answer, db=db)
 
         return {"answer": answer, "sources": [{"documents_id": str(d.document_id), "chunk_id": str(d.id)} for d in results]}
 
@@ -118,6 +131,10 @@ def ingest_api(file_path: str, db: Session = Depends(get_db), ai_service: AIServ
 def delete_document(document_id: str, db: Session = Depends(get_db)):
     return delete_documents(db, document_id)
 
+@app.delete("/chat/session/{session_id}")
+def delete_session_endpoint(session_id: UUID, db: Session = Depends(get_db)):
+    return delete_session(session_id, db)
+
 @app.get("/documents")
 def get_documents(db: Session = Depends(get_db)):
     documents = db.scalars(select(UploadedDocument)).all()
@@ -126,3 +143,25 @@ def get_documents(db: Session = Depends(get_db)):
         {"id": doc.id, "filename": doc.filename}
         for doc in documents
     ]
+
+@app.post("/chat/session")
+def create_session(user_id: int, db: Session = Depends(get_db)):
+    new_session = ChatSession(user_id=user_id, title="New Conversation")
+    db.add(new_session)
+    db.commit()
+    db.refresh(new_session)
+    return new_session
+
+@app.get("/chat/session/{session_id}/history", response_model=list[ChatMessageOut])
+def get_chat_history(session_id: UUID, db: Session = Depends(get_db)):
+    query = select(ChatMessage).where(ChatMessage.session_id == session_id).order_by(
+        ChatMessage.created_at.asc())
+    result = db.execute(query)
+
+    return result.scalars().all()
+
+@app.get("/chat/sessions")
+def get_sessions(db: Session = Depends(get_db)):
+    query = select(ChatSession).order_by(ChatSession.created_at.desc())
+    result = db.execute(query)
+    return result.scalars().all()

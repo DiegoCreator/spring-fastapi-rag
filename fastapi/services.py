@@ -39,8 +39,23 @@ class AIService:
         logger.info(f"Retrieved {len(results)} documents from the database")
         return results
 
-    def generate_answer(self, question: str, context: str):
-        cache_key = hash(question + context)
+    def generate_answer(self, question: str, context: str, chat_history: list, semantic_history: str):
+        cache_key = hash(question + context + str([m.content for m in chat_history]))
+
+        history_lines = []
+        semantic_lines = []
+
+        for message in chat_history:
+            if message.role == "user":
+                history_lines.append(f"User: {message.content}")
+            elif message.role == "assistant":
+                history_lines.append(f"Assistant: {message.content}")
+
+        formatted_history = "\n".join(history_lines)
+
+        for message in semantic_history:
+            semantic_lines.append(f"User (Past): {message.content}")
+        formatted_semantic = "\n".join(semantic_lines)
 
         if cache_key in self.answer_cache:
             logger.info("Cache hit: Returning cached answer")
@@ -49,7 +64,7 @@ class AIService:
         logger.info("Cache miss: Generating new content via Gemini")
 
         prompt = f"""
-        You are a helpful assistant. Answer the user's question below using only the information (context) provided.
+        You are a helpful assistant. "Answer the user's question using the provided document context and the conversation history below.
         If the provided context doesn't answer, reply:
         "I'm sorry, but I don't have enough information to answer this question."
     
@@ -58,10 +73,15 @@ class AIService:
     
         User Question:
         {question}
+        
+        Semantic History:
+        {formatted_semantic}
+        
+        Recent Conversation History:
+        {formatted_history}
         """
 
         logger.debug(f"Prompt sent to Gemini: {prompt}")
-
         try:
             response = self.llm_model.generate_content(prompt)
             answer = response.text
