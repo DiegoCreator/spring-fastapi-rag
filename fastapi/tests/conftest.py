@@ -1,9 +1,14 @@
+from uuid import uuid4
+
 import pytest
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
+
+from conversation_service import save_message
 from database import Base
+from models import ChatSession
 
 load_dotenv()
 SQLITE_URL = "sqlite:///:memory:"
@@ -39,3 +44,24 @@ def pg_db():
         yield session
     finally:
         session.close()
+
+@pytest.fixture
+def chat_session(pg_db):
+    session = ChatSession(
+        session_id=uuid4(),
+        title="Test session"
+    )
+    pg_db.add(session)
+    pg_db.commit()
+    return session
+
+@pytest.fixture
+def make_message(pg_db):
+    def _make(session_id, content, role="user"):
+        return save_message(
+            session_id=session_id,
+            role=role,
+            content=content,
+            db=pg_db
+        )
+    return _make
