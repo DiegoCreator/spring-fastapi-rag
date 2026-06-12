@@ -21,25 +21,21 @@ public class AiService {
 
         if (question == null || question.isBlank()) {
             log.warn("Attempted to ask AI with empty question");
-            throw new IllegalArgumentException("Question cannot be null or empty");
+            return Mono.error(new IllegalArgumentException("Question cannot be null or empty"));
         }
 
         String enrichedQuestion = PROMPT_PREFIX + question;
 
-        try {
-            log.debug("Sending request to AI service");
+        return aiServiceClient.askAi(enrichedQuestion, sessionId)
+                .map(String::valueOf)
+                .map(String::trim)
+                .doOnSubscribe(subscription -> log.debug("Sending request to AI service"))
+                .doOnNext(response -> {
+                    if (response.isBlank()) {
+                        log.warn("AI service returned empty response");
+                    }
+                })
+                .doOnError(error -> log.error("Failed to get response from AI service", error));
 
-            Object rawResponse = aiServiceClient.askAi(enrichedQuestion, sessionId);
-            String response = (rawResponse != null) ? String.valueOf(rawResponse) : "";
-
-            if (response.isBlank()) {
-                log.warn("AI service returned empty response");
-            }
-
-            return aiServiceClient.askAi(question, sessionId).map(String::trim);
-        } catch (Exception e) {
-            log.error("Failed to get response from AI service");
-            throw e;
-        }
     }
 }
