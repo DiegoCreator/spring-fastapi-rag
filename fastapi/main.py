@@ -98,7 +98,7 @@ def ask(request: Request, ask_req: AskRequest, db: Session = Depends(get_db), ai
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(), db: Session = Depends(get_db), ai_service: AIService = Depends(get_ai_service)) -> dict:
-    file_id = str(uuid.uuid4())
+    file_id = uuid.uuid4()
 
     safe_name = Path(file.filename).name
 

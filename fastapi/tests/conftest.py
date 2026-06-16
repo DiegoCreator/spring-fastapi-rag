@@ -2,10 +2,9 @@ from uuid import uuid4
 
 import pytest
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, StaticPool
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
-
 from conversation_service import save_message
 from database import Base
 from models import ChatSession
@@ -16,7 +15,7 @@ SQLITE_URL = "sqlite:///:memory:"
 @pytest.fixture()
 def db():
     """Creates a session using the engine."""
-    engine = create_engine("sqlite:///:memory:")
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,)
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
