@@ -6,18 +6,18 @@ from models import DocumentChunk
 from unittest.mock import patch
 
 @patch.dict(os.environ, {"GOOGLE_API_KEY": "fake_key"})
-def test_document_creation(pg_db: Session):
+def test_document_creation(db: Session):
     sample_content = "This is a string"
     sample_embedding = [0.1, 0.2, 0.3] * 128
 
     new_doc = DocumentChunk(embedding=sample_embedding, content=sample_content)
 
-    pg_db.add(new_doc)
-    pg_db.commit()
+    db.add(new_doc)
+    db.commit()
 
-    pg_db.expire_all()
+    db.expire_all()
 
-    retrieved = pg_db.query(DocumentChunk).filter_by(id=new_doc.id).first()
+    retrieved = db.query(DocumentChunk).filter_by(id=new_doc.id).first()
 
     assert retrieved is not None
     assert retrieved.id is not None
@@ -25,15 +25,15 @@ def test_document_creation(pg_db: Session):
 
     assert list(retrieved.embedding) == sample_embedding
 
-def test_document_content_required(pg_db: Session):
+def test_document_content_required(db: Session):
     valid_embedding = [0.1] * 384
     new_doc = DocumentChunk(embedding=valid_embedding, content=None)
 
-    pg_db.add(new_doc)
+    db.add(new_doc)
     with pytest.raises(IntegrityError):
-        pg_db.flush()
+        db.flush()
 
-    pg_db.rollback()
+    db.rollback()
 
 def test_vector_similarity_search(pg_db: Session):
     vecA = DocumentChunk(content="Quantum psyhics is complex", embedding=[0.9] * 384)

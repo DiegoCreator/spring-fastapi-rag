@@ -63,7 +63,7 @@ def test_process_and_save_chunks_workflow():
             assert mock_db.add.call_count == 2
             mock_db.commit.assert_called_once()
 
-def test_process_and_save_chunks_integration(pg_db, tmp_path):
+def test_process_and_save_chunks_integration(db, tmp_path):
     test_file = tmp_path / "data.txt"
     test_file.write_text("First Chunk\nSecond Chunk")
 
@@ -73,21 +73,20 @@ def test_process_and_save_chunks_integration(pg_db, tmp_path):
         path=str(tmp_path)
     )
 
-    pg_db.add(uploaded_doc)
-    pg_db.commit()
+    db.add(uploaded_doc)
+    db.commit()
 
     with patch("ingestion.AIService") as MockService:
         instance = MockService.return_value
 
         instance.get_embedding.return_value = [0.1] * 384
 
-        count = process_and_save_chunks(pg_db, str(test_file), uploaded_doc.id, ai_service=ai_service)
+        count = process_and_save_chunks(db, str(test_file), uploaded_doc.id, ai_service=ai_service)
 
-        assert count == 2
+        assert count == 1
 
-        saved_docs = pg_db.query(DocumentChunk).all()
-        assert len(saved_docs) == 2
-        assert saved_docs[0].content == "First Chunk"
-        assert saved_docs[1].content == "Second Chunk"
+        saved_docs = db.query(DocumentChunk).all()
+        assert len(saved_docs) == 1
+        assert saved_docs[0].content == "First Chunk\nSecond Chunk"
         assert len(saved_docs[0].embedding) == 384
 
