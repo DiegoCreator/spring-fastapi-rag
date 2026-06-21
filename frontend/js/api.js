@@ -1,5 +1,4 @@
-export const CHAT_BASE_URL = "http://localhost:8080/api";
-export const DOC_BASE_URL = "http://localhost:8000";
+export const URL = "http://localhost:8080/api";
 
 export async function apiRequest(url, options = {}) {
   const response = await fetch(url, options);

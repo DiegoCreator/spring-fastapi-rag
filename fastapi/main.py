@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from typing import List
 from sqlalchemy.orm import Session
 from conversation_service import sliding_window, save_message, semantic_search, delete_session
-from cors_config import setup_cors
 from models import UploadedDocument, ChatSession, ChatMessage
 from schemas import  ChatMessageOut
 from services import AIService
@@ -38,8 +37,6 @@ app = FastAPI(lifespan=lifespan)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-setup_cors(app)
 
 class AskRequest(BaseModel):
     question: str

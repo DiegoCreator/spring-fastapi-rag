@@ -1,8 +1,8 @@
-import { apiRequest, CHAT_BASE_URL, DOC_BASE_URL } from "./api.js";
+import { apiRequest, URL } from "./api.js";
 import { uploadInput, documentListContainer } from "./dom.js";
 
 export async function getDocuments() {
-  const response = await apiRequest(`${DOC_BASE_URL}/documents`);
+  const response = await apiRequest(`${URL}/documents`);
   return response.json();
 }
 
@@ -48,18 +48,22 @@ export async function uploadFile(file) {
 
   formData.append("file", file);
 
-  const response = await apiRequest(`${DOC_BASE_URL}/upload`, {
+  const response = await fetch(`${URL}/upload`, {
     method: "POST",
     body: formData,
   });
 
-  await loadDocuments();
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`${response.status}: ${error}`);
+  }
 
+  await loadDocuments();
   return response.text();
 }
 
 export async function deleteDocument(id) {
-  const response = await apiRequest(`${DOC_BASE_URL}/documents/${id}`, {
+  const response = await apiRequest(`${URL}/documents/${id}`, {
     method: "DELETE",
   });
 

@@ -1,4 +1,4 @@
-import { apiRequest, CHAT_BASE_URL, DOC_BASE_URL } from "./api.js";
+import { apiRequest, URL } from "./api.js";
 import { chatMessages, chatForm, userInput, chatListContainer } from "./dom.js";
 import { setCurrentSessionId } from "./state.js";
 import { appendMessage, getActiveChatId, render } from "./ui.js";
@@ -6,7 +6,7 @@ import { appendMessage, getActiveChatId, render } from "./ui.js";
 export let currentSessionId = null;
 
 export async function deleteChat(id) {
-  const response = await apiRequest(`${DOC_BASE_URL}/chat/session/${id}`, {
+  const response = await apiRequest(`${URL}/chat/session/${id}`, {
     method: "DELETE",
   });
 
@@ -23,7 +23,7 @@ export async function deleteChat(id) {
 }
 
 export async function getChatList() {
-  const response = await apiRequest(`${CHAT_BASE_URL}/chat/sessions`);
+  const response = await apiRequest(`${URL}/chat/sessions`);
   return response.json();
 }
 
@@ -33,7 +33,7 @@ export async function loadChatHistory(session_id) {
   chatMessages.innerHTML = "";
 
   const response = await apiRequest(
-    `${CHAT_BASE_URL}/chat/session/${session_id}/history`,
+    `${URL}/chat/session/${session_id}/history`,
   );
 
   const historyMessages = await response.json();
@@ -84,7 +84,7 @@ export function initializeChatForm() {
       if (!chatId) {
         console.log("No active session. Creating a new chat session...");
 
-        const response = await apiRequest(`${CHAT_BASE_URL}/chat/session`, {
+        const response = await apiRequest(`${URL}/chat/session`, {
           method: "POST",
         });
 
@@ -98,7 +98,7 @@ export function initializeChatForm() {
         await loadChatList();
       }
 
-      const response = await apiRequest(`${CHAT_BASE_URL}/ask`, {
+      const response = await apiRequest(`${URL}/ask`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

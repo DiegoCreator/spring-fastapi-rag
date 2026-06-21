@@ -36,4 +36,12 @@ public class ChatServiceClient {
                 .retrieve()
                 .bodyToMono(String.class);
     }
+
+    public Mono<String> deleteSession(UUID sessionId) {
+        return webClient.delete()
+                .uri("/chat/session/{session_id}", sessionId)
+                .retrieve()
+                .bodyToMono(String.class);
+    }
+
 }
