@@ -1,11 +1,9 @@
 package com.example.chatbot.client;
 
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +12,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -24,7 +23,7 @@ public class DocumentServiceClient {
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
 
         try {
-            builder.part("file", new InputStreamResource(file.getInputStream())).filename(file.getOriginalFilename());
+            builder.part("file", new InputStreamResource(file.getInputStream())).filename(Objects.requireNonNull(file.getOriginalFilename()));
         } catch (IOException e) {
             return Mono.error(new RuntimeException("Failed to read upload file", e));
         }

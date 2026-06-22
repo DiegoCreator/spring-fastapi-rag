@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Getter
 public class AskRequest {
-    private String question;
+    private final String question;
 
     @JsonProperty("session_id")
     private UUID sessionId;
