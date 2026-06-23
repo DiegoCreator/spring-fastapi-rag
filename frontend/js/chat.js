@@ -6,13 +6,12 @@ import { appendMessage, getActiveChatId, render } from "./ui.js";
 export let currentSessionId = null;
 
 export async function deleteChat(id) {
+  const activeId = getActiveChatId();
   const response = await apiRequest(`${URL}/chat/session/${id}`, {
     method: "DELETE",
   });
 
   await loadChatList();
-
-  const activeId = getActiveChatId();
 
   if (activeId === id) {
     history.pushState({}, "", "/");
