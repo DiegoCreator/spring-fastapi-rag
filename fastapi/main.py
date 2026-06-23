@@ -118,12 +118,6 @@ async def upload_file(file: UploadFile = File(), db: Session = Depends(get_db), 
         "chunks_saved": chunks_count
     }
 
-@app.post("/ingest")
-def ingest_api(file_path: str, db: Session = Depends(get_db), ai_service: AIService = Depends(get_ai_service)):
-    count = process_and_save_chunks(db, file_path, document_id=None, ai_service=ai_service)
-
-    return {"message": f"Processed {count} chunks."}
-
 @app.delete("/documents/{document_id}")
 def delete_document(document_id: str, db: Session = Depends(get_db)):
     return delete_documents(db, document_id)

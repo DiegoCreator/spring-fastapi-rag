@@ -206,21 +206,3 @@ def test_upload_file_accepts_unusual_filenames(db, tmp_path):
 
     app.dependency_overrides.clear()
 
-def test_ingest_api_success(db):
-    with patch("main.process_and_save_chunks") as mock_process:
-        mock_process.return_value = 5
-
-        response = client.post(
-            "/ingest",
-            params={"file_path": "/tmp/test.pdf"}
-        )
-
-        assert response.status_code == 200
-        assert response.json() == {
-            "message": "Processed 5 chunks."
-        }
-
-        mock_process.assert_called_once()
-
-    app.dependency_overrides.clear()
-
