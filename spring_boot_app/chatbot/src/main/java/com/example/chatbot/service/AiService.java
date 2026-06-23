@@ -11,8 +11,6 @@ import java.util.UUID;
 public class AiService {
     private final AiServiceClient aiServiceClient;
 
-    private static final String PROMPT_PREFIX = "Answer briefly: ";
-
     public AiService(AiServiceClient aiServiceClient) {
         this.aiServiceClient = aiServiceClient;
     }
@@ -24,9 +22,7 @@ public class AiService {
             return Mono.error(new IllegalArgumentException("Question cannot be null or empty"));
         }
 
-        String enrichedQuestion = PROMPT_PREFIX + question;
-
-        return aiServiceClient.askAi(enrichedQuestion, sessionId)
+        return aiServiceClient.askAi(question, sessionId)
                 .map(String::valueOf)
                 .map(String::trim)
                 .doOnSubscribe(subscription -> log.debug("Sending request to AI service"))

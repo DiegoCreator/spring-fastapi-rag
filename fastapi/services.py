@@ -64,7 +64,7 @@ class AIService:
         logger.info("Cache miss: Generating new content via Gemini")
 
         prompt = f"""
-        You are a helpful assistant. "Answer the user's question using the provided document context and the conversation history below.
+        You are a helpful assistant. Answer briefly. "Answer the user's question using the provided document context and the conversation history below.
         If the provided context doesn't answer, reply:
         "I'm sorry, but I don't have enough information to answer this question."
     
