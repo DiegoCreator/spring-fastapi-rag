@@ -25,6 +25,7 @@ dependencies {
 	implementation("org.postgresql:postgresql:42.7.2")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-aop:3.4.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("com.squareup.okhttp3:mockwebserver:5.0.0-alpha.14")
 	testImplementation("io.projectreactor:reactor-test")
