@@ -1,5 +1,7 @@
 package com.example.chatbot;
 import com.example.chatbot.client.ChatServiceClient;
+import com.example.chatbot.dto.ChatMessage;
+import com.example.chatbot.dto.ChatSession;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -9,8 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ChatServiceClientTests {
     private MockWebServer mockWebServer;
     private ChatServiceClient chatServiceClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() throws IOException {
@@ -38,14 +43,15 @@ public class ChatServiceClientTests {
 
     @Test
     void shouldInitiateSessionCorrectly() throws InterruptedException {
+        ChatSession expected_id = ChatSession.builder().session_id(UUID.randomUUID()).build();
         mockWebServer.enqueue(new MockResponse()
-                .setBody("mocked-session-id-123")
+                .setBody(objectMapper.writeValueAsString(expected_id))
                 .addHeader("Content-Type", "application/json"));
 
-        Mono<String> result = chatServiceClient.initiateSession(42);
+        Mono<ChatSession> result = chatServiceClient.initiateSession(42);
 
         StepVerifier.create(result)
-                .expectNext("mocked-session-id-123")
+                .assertNext(session -> assertThat(session.getSession_id()).isEqualTo(expected_id.getSession_id()))
                 .verifyComplete();
 
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
@@ -56,14 +62,18 @@ public class ChatServiceClientTests {
     @Test
     void shouldFetchChatHistoryCorrectly() throws InterruptedException {
         UUID sessionId = UUID.randomUUID();
+        ChatMessage mockMessage = ChatMessage.builder().content("Hello World").build();
         mockWebServer.enqueue(new MockResponse()
-                .setBody("mocked-session-id-123")
+                .setBody(objectMapper.writeValueAsString(List.of(mockMessage)))
                 .addHeader("Content-Type", "application/json"));
 
-        Mono<String> result = chatServiceClient.fetchChatHistory(sessionId);
+        Mono<List<ChatMessage>> result = chatServiceClient.fetchChatHistory(sessionId);
 
         StepVerifier.create(result)
-                .expectNext("mocked-session-id-123")
+                .assertNext(message -> {
+                    assertThat(message).isNotEmpty();
+                    assertThat(message.getFirst().getContent()).isEqualTo("Hello World");
+                })
                 .verifyComplete();
 
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
@@ -86,13 +96,15 @@ public class ChatServiceClientTests {
 
     @Test
     void shouldLoadChatListCorrectly() throws InterruptedException {
+        ChatSession expected_id = ChatSession.builder().session_id(UUID.randomUUID()).build();
+
         mockWebServer.enqueue(new MockResponse()
-                .setBody("mocked-session-id-123")
+                .setBody(objectMapper.writeValueAsString(expected_id))
                 .addHeader("Content-Type", "application/json"));
-        Mono<String> result = chatServiceClient.loadChatList();
+        Mono<List<ChatSession>> result = chatServiceClient.loadChatList();
 
         StepVerifier.create(result)
-                .expectNext("mocked-session-id-123")
+                .assertNext(sessions -> assertThat(sessions.getFirst().getSession_id()).isEqualTo(expected_id.getSession_id()))
                 .verifyComplete();
 
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
@@ -103,7 +115,6 @@ public class ChatServiceClientTests {
 
     @Test
     void shouldReturnErrorWhenLoadChatListEndpointReturns404() {
-        UUID sessionId = UUID.randomUUID();
 
         mockWebServer.enqueue(
                 new MockResponse().setResponseCode(404)

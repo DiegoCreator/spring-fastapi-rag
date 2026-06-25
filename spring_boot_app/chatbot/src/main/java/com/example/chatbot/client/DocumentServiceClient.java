@@ -1,5 +1,6 @@
 package com.example.chatbot.client;
 
+import com.example.chatbot.dto.UploadedDocument;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -19,7 +21,7 @@ import java.util.UUID;
 public class DocumentServiceClient {
     private final WebClient webClient;
     public DocumentServiceClient(WebClient webClient) { this.webClient = webClient; }
-    public Mono<ResponseEntity<String>> proxyUpload(@RequestPart("file") MultipartFile file) {
+    public Mono<ResponseEntity<UploadedDocument>> proxyUpload(@RequestPart("file") MultipartFile file) {
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
 
         try {
@@ -34,21 +36,22 @@ public class DocumentServiceClient {
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData(builder.build()))
                 .retrieve()
-                .toEntity(String.class);
+                .toEntity(UploadedDocument.class);
 
     }
 
-    public Mono<String> listDocuments() {
+    public Mono<List<UploadedDocument>> listDocuments() {
         return webClient.get()
                 .uri("/documents")
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToFlux(UploadedDocument.class)
+                .collectList();
     }
 
-    public Mono<String> deleteDocument(UUID document_id) {
+    public Mono<UploadedDocument> deleteDocument(UUID document_id) {
         return webClient.delete()
                 .uri("/documents/{document_id}", document_id)
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToMono(UploadedDocument.class);
     }
 }

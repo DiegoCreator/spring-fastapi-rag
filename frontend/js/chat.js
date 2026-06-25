@@ -17,8 +17,6 @@ export async function deleteChat(id) {
     history.pushState({}, "", "/");
     render();
   }
-
-  return response.json();
 }
 
 export async function getChatList() {

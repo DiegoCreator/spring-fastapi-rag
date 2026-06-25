@@ -1,9 +1,12 @@
 package com.example.chatbot.client;
 
+import com.example.chatbot.dto.ChatMessage;
+import com.example.chatbot.dto.ChatSession;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -13,35 +16,36 @@ public class ChatServiceClient {
         this.webClient = aiWebClient;
     }
 
-    public Mono<String> initiateSession(Integer userId) {
+    public Mono<ChatSession> initiateSession(Integer user_id) {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/chat/session")
-                        .queryParam("user_id", userId)
+                        .queryParam("user_id", user_id)
                         .build())
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToMono(ChatSession.class);
     }
 
-    public Mono<String> fetchChatHistory(UUID sessionId) {
+    public Mono<List<ChatMessage>> fetchChatHistory(UUID sessionId) {
         return webClient.get()
                 .uri("/chat/session/{sessionId}/history", sessionId)
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToFlux(ChatMessage.class)
+                .collectList();
     }
 
-    public Mono<String> loadChatList() {
+    public Mono<List<ChatSession>> loadChatList() {
         return webClient.get()
                 .uri("/chat/sessions")
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToFlux(ChatSession.class)
+                .collectList();
     }
 
-    public Mono<String> deleteSession(UUID sessionId) {
+    public Mono<ChatSession> deleteSession(UUID sessionId) {
         return webClient.delete()
                 .uri("/chat/session/{session_id}", sessionId)
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToMono(ChatSession.class);
     }
-
 }

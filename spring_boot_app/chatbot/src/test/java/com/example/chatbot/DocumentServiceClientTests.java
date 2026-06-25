@@ -1,6 +1,7 @@
 package com.example.chatbot;
 
 import com.example.chatbot.client.DocumentServiceClient;
+import com.example.chatbot.dto.UploadedDocument;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -14,10 +15,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DocumentServiceClientTests {
     private MockWebServer mockWebServer;
@@ -44,12 +45,26 @@ public class DocumentServiceClientTests {
     void shouldProxyUploadCorrectly() throws InterruptedException {
         MockMultipartFile mockFile = new MockMultipartFile("file", "test.txt", MediaType.TEXT_PLAIN_VALUE, "hello world".getBytes());
 
-        mockWebServer.enqueue(new MockResponse().setResponseCode(201).setBody("Uploaded"));
+        String mockJsonArray = """
+              {
+              "id": "%s", "filename": "test.txt"
+              }
+            """.formatted(UUID.randomUUID());
+
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(201)
+                .setHeader("Content-Type", "application/json")
+                .setBody(mockJsonArray));
 
         StepVerifier.create(documentServiceClient.proxyUpload(mockFile))
                 .assertNext(response -> {
                     assertThat(response.getStatusCode().value()).isEqualTo(201);
-                    assertThat(response.getBody()).isEqualTo("Uploaded");
+
+                    UploadedDocument body = response.getBody();
+
+                    assertThat(body).isNotNull();
+                    assertThat(Objects.requireNonNull(body).getFilename()).isEqualTo("test.txt");
+                    assertThat(body.getId()).isNotNull();
                 }).verifyComplete();
 
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
@@ -70,12 +85,23 @@ public class DocumentServiceClientTests {
 
     @Test
     void shouldListDocumentCorrectly() throws InterruptedException {
+
+        String mockJsonArray = """
+            [
+              {"id": "%s", "filename": "doc1"},
+              {"id": "%s", "filename": "doc2"}
+            ]
+            """.formatted(UUID.randomUUID(), UUID.randomUUID());
+
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader("Content-Type", "application/json")
-                .setBody("[\"doc1\", \"doc2\"]"));
+                .setBody(mockJsonArray));
 
-        StepVerifier.create(documentServiceClient.listDocuments()).expectNext("[\"doc1\", \"doc2\"]").verifyComplete();
+        StepVerifier.create(documentServiceClient.listDocuments()).assertNext(docs -> {
+             assertThat(docs.getFirst().getFilename()).isEqualTo("doc1");
+             assertThat(docs.get(1).getFilename()).isEqualTo("doc2");
+        }).verifyComplete();
 
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
         assertThat(recordedRequest.getPath()).isEqualTo("/documents");
@@ -85,10 +111,17 @@ public class DocumentServiceClientTests {
     @Test
     void shouldDeleteDocumentCorrectly() throws InterruptedException {
         UUID docId = UUID.randomUUID();
-        mockWebServer.enqueue(new MockResponse().setResponseCode(200).setBody("Deleted"));
+
+        String mockJsonArray = """
+              {
+              "id": "%s", "filename": "Deleted"
+              }
+            """.formatted(docId);
+
+        mockWebServer.enqueue(new MockResponse().setResponseCode(200).setHeader("Content-Type", "application/json").setBody(mockJsonArray));
 
         StepVerifier.create(documentServiceClient.deleteDocument(docId))
-                .expectNext("Deleted")
+                .assertNext(deletedDoc -> assertThat(deletedDoc.getId()).isEqualTo(docId))
                 .verifyComplete();
 
         RecordedRequest recordedRequest = mockWebServer.takeRequest();
