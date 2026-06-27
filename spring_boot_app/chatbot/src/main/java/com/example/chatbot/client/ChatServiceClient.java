@@ -48,4 +48,14 @@ public class ChatServiceClient {
                 .retrieve()
                 .bodyToMono(ChatSession.class);
     }
+
+    public Mono<ChatSession> renameSessionTitle(UUID sessionId, String title) {
+        return webClient.put()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/chat/session/{session_id}")
+                        .queryParam("title", title)
+                        .build(sessionId))
+                .retrieve()
+                .bodyToMono(ChatSession.class);
+    }
 }

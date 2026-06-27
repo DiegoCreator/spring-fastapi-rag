@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import tools.jackson.databind.ObjectMapper;
@@ -124,4 +125,74 @@ public class ChatServiceClientTests {
                 .expectError()
                 .verify();
     }
+
+    @Test
+    void shouldDeleteSessionCorrectly() throws InterruptedException {
+        UUID sessionId = UUID.randomUUID();
+        ChatSession expectedSession = ChatSession.builder().session_id(sessionId).title("Deleted Session Status").build();
+        mockWebServer.enqueue(new MockResponse()
+                .setBody(objectMapper.writeValueAsString(expectedSession))
+                .addHeader("Content-Type", "application/json"));
+
+        Mono<ChatSession> result = chatServiceClient.deleteSession(sessionId);
+        StepVerifier.create(result)
+                .assertNext(session -> {
+                    assertThat(session.getSession_id()).isEqualTo(sessionId);
+                    assertThat(session.getTitle()).isEqualTo("Deleted Session Status");
+                })
+                .verifyComplete();
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertThat(recordedRequest.getMethod()).isEqualTo("DELETE");
+        assertThat(recordedRequest.getPath()).isEqualTo("/chat/session/" + sessionId);
+    }
+
+    @Test
+    void deleteSession_NotFound_ReturnsError() throws InterruptedException {
+        UUID sessionId = UUID.randomUUID();
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(404));
+        Mono<ChatSession> result = chatServiceClient.deleteSession(sessionId);
+
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof WebClientResponseException
+                        && ((WebClientResponseException) throwable).getStatusCode().value() == 404)
+                .verify();
+    }
+
+    @Test
+    void shouldRenameSessionCorrectly() throws InterruptedException {
+        UUID sessionId = UUID.randomUUID();
+        String newTitle = "test";
+        ChatSession expectedSession = ChatSession.builder().session_id(sessionId).title(newTitle).build();
+        mockWebServer.enqueue(new MockResponse()
+                .setBody(objectMapper.writeValueAsString(expectedSession))
+                .addHeader("Content-Type", "application/json"));
+
+        Mono<ChatSession> result = chatServiceClient.renameSessionTitle(sessionId, newTitle);
+        StepVerifier.create(result)
+                .assertNext(session -> {
+                    assertThat(session.getSession_id()).isEqualTo(sessionId);
+                    assertThat(session.getTitle()).isEqualTo("test");
+                })
+                .verifyComplete();
+
+        RecordedRequest recordedRequest = mockWebServer.takeRequest();
+        assertThat(recordedRequest.getMethod()).isEqualTo("PUT");
+        assertThat(recordedRequest.getPath()).isEqualTo("/chat/session/" + sessionId + "?title=test");
+    }
+
+    @Test
+    void renameSession_NotFound_ReturnsError() throws InterruptedException {
+        UUID sessionId = UUID.randomUUID();
+        mockWebServer.enqueue(new MockResponse()
+                .setResponseCode(404));
+        Mono<ChatSession> result = chatServiceClient.renameSessionTitle(sessionId, "test");
+
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof WebClientResponseException
+                        && ((WebClientResponseException) throwable).getStatusCode().value() == 404)
+                .verify();
+    }
+
 }

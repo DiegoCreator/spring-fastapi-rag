@@ -6,6 +6,7 @@ import com.example.chatbot.dto.ChatMessage;
 import com.example.chatbot.dto.ChatSession;
 import com.example.chatbot.dto.UploadedDocument;
 import com.example.chatbot.service.AiService;
+import jakarta.validation.constraints.Size;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +32,7 @@ public class AiController {
     public Mono<String> ask(@RequestBody AskRequest request) {
         long start = System.currentTimeMillis();
 
-        return aiService.askQuestion(request.getQuestion(), request.getSessionId()) // Assuming this returns Mono<String>
+        return aiService.askQuestion(request.getQuestion(), request.getSessionId())
                 .doOnSuccess(reply -> log.info("AI response generated in {} ms", System.currentTimeMillis() - start));
     }
 
@@ -63,6 +64,14 @@ public class AiController {
                 .doOnSuccess(reply -> log.info("Chat session {} deleted in {} ms", sessionId, System.currentTimeMillis() - start));
     }
 
+    @PutMapping("/api/chat/session/{session_id}")
+    public Mono<ChatSession> renameChatSession(@PathVariable("session_id") UUID sessionId, @RequestParam ("title")
+    @Size(min=1, max=50, message="The title must be between 1 and 50 characters long") String title) {
+        long start = System.currentTimeMillis();
+        return chatServiceClient.renameSessionTitle(sessionId, title)
+                .doOnSuccess(reply -> log.info("Document {} renamed  in {} ms", sessionId, System.currentTimeMillis() - start));
+    }
+
     @PostMapping("/api/upload")
     public Mono<UploadedDocument> createDocument(@RequestPart("file") MultipartFile file) {
         long start = System.currentTimeMillis();
@@ -87,5 +96,4 @@ public class AiController {
         return documentServiceClient.deleteDocument(document_id)
                 .doOnSuccess(reply -> log.info("Document {} deleted in {} ms", document_id, System.currentTimeMillis() - start));
     }
-
 }
