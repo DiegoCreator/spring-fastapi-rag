@@ -30,3 +30,14 @@ def delete_session(session_id: UUID, db: Session) -> None:
     if chat_session:
         db.delete(chat_session)
         db.commit()
+
+def rename_session_title(session_id: UUID,new_title: str, db: Session):
+    chat_session = db.get(ChatSession, session_id)
+    if chat_session:
+        chat_session.title = new_title
+        db.commit()
+
+        db.refresh(chat_session)
+
+        return chat_session
+    return None

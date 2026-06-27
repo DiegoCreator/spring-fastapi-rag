@@ -1,6 +1,6 @@
 from uuid import uuid4
 from sqlalchemy.orm import Session
-from conversation_service import sliding_window, save_message, delete_session, semantic_search
+from conversation_service import sliding_window, save_message, delete_session, semantic_search, rename_session_title
 from models import ChatSession, ChatMessage
 
 
@@ -142,4 +142,10 @@ def test_delete_session_cascades_messages(chat_session, pg_db):
     delete_session(chat_session.session_id, pg_db)
     assert pg_db.get(ChatMessage, msg.message_id) is None
 
+def test_rename_session_renames_session(chat_session, pg_db):
+    new_title = "test"
+    rename_session_title(chat_session.session_id, new_title, pg_db)
+    pg_db.expire_all()
+    db_session = pg_db.get(ChatSession, chat_session.session_id)
 
+    assert db_session.title == new_title

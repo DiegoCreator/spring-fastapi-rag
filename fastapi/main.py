@@ -1,11 +1,11 @@
 import os
 import uuid
 from uuid import UUID
-from fastapi import FastAPI, Request, UploadFile, File, Depends
+from fastapi import FastAPI, Request, UploadFile, File, Depends, Query
 from pydantic import BaseModel
 from typing import List
 from sqlalchemy.orm import Session
-from conversation_service import sliding_window, save_message, semantic_search, delete_session
+from conversation_service import sliding_window, save_message, semantic_search, delete_session, rename_session_title
 from models import UploadedDocument, ChatSession, ChatMessage
 from schemas import  ChatMessageOut
 from services import AIService
@@ -156,3 +156,7 @@ def get_sessions(db: Session = Depends(get_db)):
     query = select(ChatSession).order_by(ChatSession.created_at.desc())
     result = db.execute(query)
     return result.scalars().all()
+
+@app.put("/chat/session/{session_id}")
+def rename_session_title_endpoint(session_id: UUID, title: str = Query(max_length=50, min_length=1), db: Session = Depends(get_db)):
+    return rename_session_title(session_id, title, db)
