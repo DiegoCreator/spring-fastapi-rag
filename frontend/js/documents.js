@@ -1,5 +1,6 @@
 import { apiRequest, URL } from "./api.js";
 import { uploadInput, documentListContainer } from "./dom.js";
+import { createActionsMenu, toggleMenu } from "./ui.js";
 
 export async function getDocuments() {
   const response = await apiRequest(`${URL}/documents`);
@@ -13,11 +14,9 @@ export async function loadDocuments() {
     documentListContainer.innerHTML = documents
       .map(
         (doc) => `
-      <div>
+      <div class="doc-item" data-id="${doc.id}">
         ${escapeHTML(doc.filename)}
-       <button class="delete-btn" data-id="${doc.id}">
-          Delete
-        </button>
+        ${createActionsMenu(doc.id, { showRename: false })}
       </div>
     `,
       )
@@ -30,12 +29,20 @@ export async function loadDocuments() {
 
 export function handleDocumentDeleteClick() {
   documentListContainer.addEventListener("click", (e) => {
+    const dotsMenuBtn = e.target.closest(".dots-menu-btn");
+    if (dotsMenuBtn) {
+      const docItem = dotsMenuBtn.closest(".doc-item");
+
+      toggleMenu(e, docItem.dataset.id);
+      return;
+    }
+
     const btn = e.target.closest(".delete-btn");
     if (!btn) return;
 
-    const id = btn.dataset.id;
+    const docItem = btn.closest(".doc-item");
     try {
-      deleteDocument(id);
+      deleteDocument(docItem.dataset.id);
     } catch (error) {
       console.error(`Deletion failed: ${error.message}`);
       alert("Could not delete document.");

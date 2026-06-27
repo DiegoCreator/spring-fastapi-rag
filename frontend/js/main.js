@@ -8,7 +8,7 @@ import {
   initializeDocumentUpload,
   handleDocumentDeleteClick,
 } from "./documents.js";
-import { render, appendMessage } from "./ui.js";
+import { render, appendMessage, closeAllMenus } from "./ui.js";
 
 window.addEventListener("DOMContentLoaded", async () => {
   initializeChatForm();
@@ -22,3 +22,4 @@ window.addEventListener("DOMContentLoaded", async () => {
 });
 
 window.addEventListener("popstate", render);
+window.addEventListener("click", closeAllMenus);

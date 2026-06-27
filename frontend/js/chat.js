@@ -1,7 +1,13 @@
 import { apiRequest, URL } from "./api.js";
 import { chatMessages, chatForm, userInput, chatListContainer } from "./dom.js";
 import { setCurrentSessionId } from "./state.js";
-import { appendMessage, getActiveChatId, render } from "./ui.js";
+import {
+  appendMessage,
+  getActiveChatId,
+  render,
+  toggleMenu,
+  createActionsMenu,
+} from "./ui.js";
 
 export let currentSessionId = null;
 
@@ -17,6 +23,18 @@ export async function deleteChat(id) {
     history.pushState({}, "", "/");
     render();
   }
+}
+
+export async function renameChatTitle(id, newTitle) {
+  const activeId = getActiveChatId();
+  const response = await apiRequest(
+    `${URL}/chat/session/${id}?title=${encodeURIComponent(newTitle)}`,
+    {
+      method: "PUT",
+    },
+  );
+
+  await loadChatList();
 }
 
 export async function getChatList() {
@@ -50,9 +68,9 @@ export async function loadChatList() {
         (chat) => `
       <div class="chat-item" data-session-id="${chat.session_id}">
         <span class="chatTitle">${chat.title}</span>
-        <button class="delete-btn">
-          Delete
-        </button>
+        
+        ${createActionsMenu(chat.session_id)}
+
       </div>
     `,
       )
@@ -126,6 +144,13 @@ export function initializeChatForm() {
 
 export function handleChatListClick() {
   chatListContainer.addEventListener("click", async (e) => {
+    const dotsMenuBtn = e.target.closest(".dots-menu-btn");
+    if (dotsMenuBtn) {
+      const chatItem = dotsMenuBtn.closest(".chat-item");
+      toggleMenu(e, chatItem.dataset.sessionId);
+      return;
+    }
+
     const deleteBtn = e.target.closest(".delete-btn");
     if (deleteBtn) {
       const chatItem = deleteBtn.closest(".chat-item");
@@ -133,10 +158,31 @@ export function handleChatListClick() {
       return;
     }
 
+    const renameBtn = e.target.closest(".rename-btn");
+    if (renameBtn) {
+      const chatItem = renameBtn.closest(".chat-item");
+
+      const newTitle = prompt("Write a new chat name (max 50 characters): ");
+
+      if (newTitle !== null) {
+        const trimmedTitle = newTitle.trim();
+        if (trimmedTitle === "") {
+          alert("The chat name cannot be blank!");
+        } else if (trimmedTitle.length > 50) {
+          alert(`The name is too long! (you writed ${trimmedTitle.length}).`);
+        } else {
+          renameChatTitle(chatItem.dataset.sessionId, newTitle.trim());
+        }
+      }
+      return;
+    }
+
     const chatItem = e.target.closest(".chat-item");
 
     if (chatItem) {
-      navigateToChat(chatItem.dataset.sessionId);
+      if (chatItem && !e.target.closest(".dropdown-menu")) {
+        navigateToChat(chatItem.dataset.sessionId);
+      }
     }
   });
 }
