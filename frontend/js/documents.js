@@ -15,7 +15,7 @@ export async function loadDocuments() {
       .map(
         (doc) => `
       <div class="doc-item" data-id="${doc.id}">
-        ${escapeHTML(doc.filename)}
+        <span class=docTitle title="${doc.filename}">${escapeHTML(doc.filename)}</span>
         ${createActionsMenu(doc.id, { showRename: false })}
       </div>
     `,

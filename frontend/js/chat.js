@@ -67,7 +67,7 @@ export async function loadChatList() {
       .map(
         (chat) => `
       <div class="chat-item" data-session-id="${chat.session_id}">
-        <span class="chatTitle">${chat.title}</span>
+        <span class="chatTitle" title="${chat.title}">${chat.title}</span>
         
         ${createActionsMenu(chat.session_id)}
 

@@ -135,7 +135,7 @@ body {
 .dropdown-menu {
   display: none;
   position: absolute;
-  right: 0;
+  left: 0;
   top: 100%;
   background-color: #272424;
   border: 1px solid #ddd;
@@ -182,7 +182,14 @@ body {
   flex-direction: column;
 }
 
-.chatTitle {
+.chatTitle,
+.docTitle {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
   cursor: pointer;
 }
 
