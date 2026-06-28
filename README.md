@@ -20,7 +20,7 @@ The project is under active development.
 
 * **Ready:** Communication between services (Spring <-> FastAPI), connection to the pgvector database, possibility of using the `/ask` endpoint, Integration with LLM, document processing (chunking/embedding), ingestion, frontend, logging, upload file, support for .txt, PDF, DOCX, MD extensions, conversation memory, Swagger/OpenAPI documentation for both services.
 
-* **Under construction:* Add chat rename function.
+* **Under construction:* 
 
 ### 2. Architecture
  
@@ -142,7 +142,7 @@ curl -X POST http://localhost:8080/ask \
 
 * [x] Add Swagger/OpenAPI documentation for both services.
 
-* [ ] Add chat rename function.
+* [x] Add chat rename function.
 
 
 ### 8. License
