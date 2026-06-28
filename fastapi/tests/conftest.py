@@ -2,7 +2,7 @@ from uuid import uuid4
 
 import pytest
 import os
-from sqlalchemy import create_engine, StaticPool
+from sqlalchemy import create_engine, StaticPool, text
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 from conversation_service import save_message
@@ -25,7 +25,7 @@ def db():
         session.close()
         Base.metadata.drop_all(bind=engine)
 
-POSTGRES_URL = os.getenv("DATABASE_URL")
+POSTGRES_URL = os.getenv("DATABASE_TEST_URL")
 
 if POSTGRES_URL and "@db" in POSTGRES_URL:
     POSTGRES_URL = POSTGRES_URL.replace("@db", "@localhost")
@@ -33,6 +33,10 @@ if POSTGRES_URL and "@db" in POSTGRES_URL:
 @pytest.fixture()
 def pg_db():
     engine = create_engine(POSTGRES_URL)
+    with engine.connect() as conn:
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        conn.commit()
+
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
