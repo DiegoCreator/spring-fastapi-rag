@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from conversation_service import sliding_window, save_message, semantic_search, delete_session, rename_session_title
 from models import UploadedDocument, ChatSession, ChatMessage
 from schemas import  ChatMessageOut
-from services import AIService
+from services import AIService, update_session_title
 from database import get_db, Base, get_engine
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -62,7 +62,6 @@ def ask(request: Request, ask_req: AskRequest, db: Session = Depends(get_db), ai
     logger.info(f"Received question: {ask_req.question} from {request.client.host}")
 
     try:
-
         query_embedding = ai_service.get_embedding(ask_req.question)
 
         save_message(ask_req.session_id, role="user", content=ask_req.question, embedding=query_embedding, db=db)
@@ -87,6 +86,11 @@ def ask(request: Request, ask_req: AskRequest, db: Session = Depends(get_db), ai
 
         save_message(ask_req.session_id, role="assistant", content=answer, db=db)
 
+        is_first_message = len(chat_history) == 1
+
+        if is_first_message:
+            logger.info(f"First message detected for session {ask_req.session_id}. Triggering title generation...")
+            update_session_title(ask_req.session_id, ask_req.question, ai_service, db)
         return {"answer": answer, "sources": [{"documents_id": str(d.document_id), "chunk_id": str(d.id)} for d in results]}
 
     except Exception as e:

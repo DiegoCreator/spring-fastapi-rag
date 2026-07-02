@@ -2,7 +2,9 @@ from typing import List
 import os
 from sentence_transformers import SentenceTransformer
 import google.generativeai as genai
-from models import DocumentChunk
+from sqlalchemy import UUID, select
+from sqlalchemy.orm import Session
+from models import DocumentChunk, ChatSession
 from dotenv import load_dotenv
 import logging
 
@@ -18,6 +20,7 @@ class AIService:
             raise ValueError("API key missing in environment variables!")
         genai.configure(api_key=self.api_key)
         self.llm_model = genai.GenerativeModel("models/gemini-2.5-flash")
+        self.title_generator_model = genai.GenerativeModel("models/gemini-2.5-flash-lite")
         self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
         self.answer_cache = {}
         logger.info("AIService initialized successfully.")
@@ -91,3 +94,31 @@ class AIService:
         except Exception as e:
             logging.exception("Failed to generate content from Gemini API")
             return "An error occurred while generating the response"
+
+    def generate_title(self, first_question: str):
+        prompt = f"""
+        You are a database helper. Summary of the given user question to the form of a short thread title (max 4 words).
+        Do not use quotation marks or a period at the end. Keep the language of the question."
+        
+        User Question:
+        {first_question}
+        """
+
+
+        response = self.title_generator_model.generate_content(prompt)
+        answer = response.text
+        cleaned_answer = answer.replace(":", "").replace(".", "").strip()
+        return cleaned_answer
+
+def update_session_title(session_id: UUID, first_question: str, ai_service: AIService, db: Session):
+    try:
+        new_title = ai_service.generate_title(first_question)
+        session = db.scalar(select(ChatSession).where(ChatSession.session_id == session_id))
+        if session:
+            session.title = new_title
+            db.commit()
+
+            logger.info(f"Successfully updated title for session {session_id} to: {new_title}")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to update session title in background: {str(e)}")

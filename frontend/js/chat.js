@@ -109,8 +109,9 @@ export function initializeChatForm() {
 
         setCurrentSessionId(sessionData.session_id);
 
-        history.pushState({}, "", `?Chat=${chatId}`);
         await loadChatList();
+
+        history.pushState({}, "", `?Chat=${chatId}`);
       }
 
       const response = await apiRequest(`${URL}/ask`, {
@@ -129,6 +130,10 @@ export function initializeChatForm() {
         loadingElem.textContent = await response.text();
         loadingElem.className = "message ai-message";
       }
+
+      setTimeout(async () => {
+        await loadChatList();
+      }, 5000);
     } catch (error) {
       console.error("Error connecting to backend:", error);
 
