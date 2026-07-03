@@ -1,4 +1,4 @@
-<h1 align="center">Spring-FastAPI-RAG (WIP)</h1>
+<h1 align="center">Spring-FastAPI-RAG</h1>
 
 A project integrating Spring Boot (as a backend) and FastAPI (as an AI-enabled service) with a PostgreSQL + pgvector database to create a RAG system.
 
@@ -16,11 +16,7 @@ RAG (Retrieval-Augmented Generation) is a technique that allows language models 
 
 ### 1. Project status
 
-The project is under active development.
-
-* **Ready:** Communication between services (Spring <-> FastAPI), connection to the pgvector database, possibility of using the `/ask` endpoint, Integration with LLM, document processing (chunking/embedding), ingestion, frontend, logging, upload file, support for .txt, PDF, DOCX, MD extensions, conversation memory, Swagger/OpenAPI documentation for both services.
-
-* **Under construction:* 
+The project is **completed**. All core features of the RAG pipeline, service communication, and frontend interface have been successfully implemented and tested.
 
 ### 2. Architecture
  
@@ -128,22 +124,17 @@ curl -X POST http://localhost:8080/ask \
 
 2. type e.g. "What is FastAPI?"
 
-### 7. Roadmap
+### 7. Key Features
 
-* [x] Integration with a specific LLM provider (e.g. OpenAI / Ollama).
+* **Multi-service Architecture:** Seamless communication between Spring Boot and FastAPI.
 
-* [x] Implementation of a document processing pipeline (ETL).
+* **Advanced Document Processing:** Full ETL pipeline with chunking and embedding generation for `.txt`, `.pdf`, `.docx`, and `.md` file
 
-* [x] Add frontend.
+* **Vector Search:** Powered by PostgreSQL and the `pgvector` extension.
 
-* [x] Add support for PDF, DOCX, MD extensions in the file upload function.
+* **Contextual AI:** Integrated with Gemini API, featuring full conversation memory and chat management (including chat renaming).
 
-* [x] Conversation memory.
-
-* [x] Add Swagger/OpenAPI documentation for both services.
-
-* [x] Add chat rename function.
-
+* **Developer Friendly:** Fully documented with Swagger/OpenAPI for both services and easily containerized via Docker Compose.
 
 ### 8. License
 
