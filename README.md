@@ -6,9 +6,11 @@ This project is a learning exercise for experimenting with RAG architecture and 
 
 * **Who is it for?**
 
-for developers learning RAG systems
+Developers learning RAG systems
 
 for experimenting with Spring + FastAPI integration
+
+Anyone interested in vector databases and AI-powered applications
 
 * **What is RAG?**
 
@@ -22,9 +24,9 @@ The project is **completed**. All core features of the RAG pipeline, service com
  
 The system is based on microservices:
 
-* **Spring boot:** Manages business logic and user communication.
+* **Spring Boot:** Manages core business logic and user communication. It serves as an API Gateway/Orchestrator that receives requests from the frontend, routes them to FastAPI for specialized processing, and returns the final response to the user.
 
-* **FastAPI:** Responsible for heavy AI operations.
+* **FastAPI:** Serves as the core application backend and AI engine. Beyond handling heavy AI operations, it manages the core business logic, including file upload, and CRUD operations for chats and documents (fetching, deleting, and renaming).
 
 * **PostgreSQL + pgvector:** A database storing vectors for semantic search.
 
@@ -35,6 +37,8 @@ The system is based on microservices:
 /spring-app
 
 /fastapi-service
+
+/frontend
 
 docker-compose.yml
 
@@ -48,7 +52,21 @@ docker-compose.yml
 
 * **Frontend:** Basic HTML, CSS and JS
 
-### 4. Knowledge Base
+### 4. AI Models
+
+The system uses different models for generation, chat management, and embeddings:
+
+| Purpose | Model |
+|----------|--------|
+| Response Generation | Gemini 2.5 Flash |
+| Chat Title Generation | Gemini 2.5 Flash Lite |
+| Embeddings | all-MiniLM-L6-v2 (Sentence Transformers) |
+
+The embedding model runs locally inside the FastAPI service and generates vector representations that are stored in PostgreSQL.
+
+The Gemini models are used for answer generation and chat management and automatic chat title generation.
+
+### 5. Knowledge Base
 
 This project uses a simple RAG pipeline where users can upload text files through the frontend.
 
@@ -56,9 +74,9 @@ Uploaded files are stored in the database and become available to the AI assista
 
 The repository includes a sample file in `uploads` folder so the project can be tested immediately after setup.
 
-You can also upload your own .txt files from the UI to create a custom knowledge base.
+You can also upload your own .txt, .pdf, .docx, and .md files from the UI to create a custom knowledge base.
 
-### 5. How to start the project
+### 6. How to start the project
 
 The easiest way to get the whole system up and running is to use Docker Compose.
 
@@ -100,35 +118,64 @@ docker-compose up --build
 
 * **Service B (FastAPI):** Builds from a second Dockerfile (Python environment configuration).
 
-* **Frontend:**  Builds from a third Dockerfile (Frontend evironment configuration).
+* **Frontend:**  Builds from a third Dockerfile (Frontend environment configuration).
 
 * **PostgreSQL:** A database instance with the pgvector extension is automatically launched.
 
 * **Networking:** The containers are connected to a single network, allowing communication between Spring and FastAPI to work out of the box.
 
-### 6. API testing
+### 7. API testing
 
-After running the application using docker-compose, you can test communication with the RAG system by sending a request to the `/ask` endpoint.
+For the commands to work, you need to start the FastAPI service and the Spring boot service.
 
 * **Using `cURL`:**
+
+#### Ask a question
 
 ```bash
 curl -X POST http://localhost:8080/ask \
      -H "Content-Type: application/json" \
-     -d '{"question": "What is FastAPI?"}'
+     -d '{"question": "What is FastAPI?", "session_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"}'
+```
+
+#### Upload a document
+
+```bash
+curl -X POST http://localhost:8080/api/upload \
+     -F "file=@yourfile"
+```
+
+#### List uploaded documents
+
+```bash
+curl -X GET http://localhost:8080/api/documents 
+```
+
+#### Delete a document
+
+```bash
+curl -X DELETE http://localhost:8080/api/documents/{document_id} 
+```
+
+#### Rename a chat
+
+```bash
+curl -X PUT http://localhost:8080/api/chat/session/{session_id}?title=example 
 ```
 
 * **using the frontend:**
 
-1. Run the app and enter the frontend.
+1. Run the app and enter the frontend: http://localhost:3000.
 
-2. type e.g. "What is FastAPI?"
+For a complete list of available endpoints, visit:
 
-### 7. Key Features
+* Spring Boot Swagger UI: http://localhost:8080/swagger-ui.html
+
+### 8. Key Features
 
 * **Multi-service Architecture:** Seamless communication between Spring Boot and FastAPI.
 
-* **Advanced Document Processing:** Full ETL pipeline with chunking and embedding generation for `.txt`, `.pdf`, `.docx`, and `.md` file
+* **Advanced Document Processing:** Full ETL pipeline with chunking and embedding generation for `.txt`, `.pdf`, `.docx`, and `.md` files
 
 * **Vector Search:** Powered by PostgreSQL and the `pgvector` extension.
 
@@ -136,6 +183,6 @@ curl -X POST http://localhost:8080/ask \
 
 * **Developer Friendly:** Fully documented with Swagger/OpenAPI for both services and easily containerized via Docker Compose.
 
-### 8. License
+### 9. License
 
 This project is open-source and available under the MIT License.
